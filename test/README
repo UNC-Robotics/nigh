@@ -1,0 +1,29 @@
+To run tests use:
+
+    make
+
+To run test using multiple concurrent processes, use:
+
+    make -j8 test
+    make -j1 ctest
+
+The number after '-j' is the number of parallel processes to run.
+This should be set to the number of hardware threads your CPU
+supports.  Running tests is almost entirely CPU bound, so there is
+little benefit in having the -j value exceed the CPU hardware thread
+count.  (Unlike traditional builds in which CPU time is occasionally
+idle while waiting for I/O.)
+
+Optionally, you can specify the build type to be "release" (default),
+"debug", or "valgrind":
+
+    make -DBUILD_TYPE=debug -j8
+
+All tests that start with "generated_..." are automatically generated
+by "generate_tests.sh".  They should not be modified by hand.
+
+The 'ctest' test suite is the suite of concurrent tests.  These test
+internally start up and run multiple threads, and thus should not be
+run concurrently with other tests.  They should be run one at a time.
+Unfortunately gnumake does not provide a mechanism to have some
+processes run concurrently and other to not.
