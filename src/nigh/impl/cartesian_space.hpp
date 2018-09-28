@@ -69,6 +69,9 @@ namespace unc::robotics::nigh::impl {
         using Distance = decltype(
             (std::declval<typename cartesian_space_element<I, S, M>::Distance>() + ...));
 
+        CartesianSpace() {
+        }
+        
         template <typename ... Args>
         explicit CartesianSpace(Args&& ... args)
             : Base(std::forward<Args>(args)...)

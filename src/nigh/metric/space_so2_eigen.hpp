@@ -37,10 +37,11 @@
 #ifndef NIGH_METRIC_SPACE_SO2_EIGEN_HPP
 #define NIGH_METRIC_SPACE_SO2_EIGEN_HPP
 
-#include <Eigen/Dense>
-#include "../impl/so2.hpp"
+#include "so2.hpp"
 #include "space.hpp"
+#include "../impl/so2.hpp"
 #include "../impl/eigen_space.hpp"
+#include <Eigen/Dense>
 
 namespace unc::robotics::nigh::metric {
     template <typename S, int r, int c, int opts, int R, int C, int p>

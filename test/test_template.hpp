@@ -111,8 +111,8 @@ namespace std {
 // tuple_element is declared as a class and as a struct in some
 // libraries.  there's no way to avoid the mismatched tag warning
 // without just disabling it.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmismatched-tags"
+// #pragma GCC diagnostic push
+// #pragma GCC diagnostic ignored "-Wmismatched-tags"
 
     template <typename Scalar>
     struct tuple_element<0, nigh_test::SE3State<Scalar>> {
@@ -124,7 +124,7 @@ namespace std {
         using type = Eigen::Matrix<Scalar, 3, 1>;
     };
 
-#pragma GCC diagnostic pop
+// #pragma GCC diagnostic pop
 
     template <typename Char, typename Traits, typename ... T>
     auto& operator << (std::basic_ostream<Char, Traits>& out, const std::tuple<T...>& q) {

@@ -44,6 +44,11 @@ namespace unc::robotics::nigh::impl {
     template <int r, int c>
     struct EigenSpace;
 
+    template <>
+    struct EigenSpace<1, 1> : SpaceBase<1> {
+        using SpaceBase<1>::SpaceBase;
+    };
+
     template <int r>
     struct EigenSpace<r, 1> : SpaceBase<r> {
         using SpaceBase<r>::SpaceBase;

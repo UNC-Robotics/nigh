@@ -20,7 +20,7 @@ shift 2
 
     sep="plot "
     for file in $@ ; do
-        title=$(sed -n '/^# Strategy = / { s/.*= // ; p }' "$file")
+        title=$(sed -n '/^# Strategy = / { s/.*= // ; p ; }' "$file")
         echo -n "$sep '$file' using 1:4 w lp lw scale title '$title'"
         sep=", "
     done

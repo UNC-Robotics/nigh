@@ -209,7 +209,7 @@ int main(int argc, char *argv[]) {
             auto elapsed = std::chrono::high_resolution_clock::now() - start;
             auto nAsserts = g_assertionCount.load() - assertionsBefore;
             std::ostringstream msg;
-            msg.imbue(std::locale(""));
+            // msg.imbue(std::locale(""));
             msg << test->name_ << " \33[32mpassed ✓\33[0m ("
                 << (nAsserts ? "" : "\33[31m")
                 << nAsserts << " assertion" << (nAsserts == 1 ? "" : "s")
@@ -221,7 +221,7 @@ int main(int argc, char *argv[]) {
         } catch (const std::exception& e) {
             auto nAsserts = g_assertionCount.load() - assertionsBefore;
             std::ostringstream msg;
-            msg.imbue(std::locale(""));
+            // msg.imbue(std::locale(""));
             msg << test->name_ << " \33[31;1mfailed ⚠\33[0m  after "
                 << nAsserts << " assertion" << (nAsserts == 1 ? "" : "s") << "\n\t"
                 << e.what() << "\n";

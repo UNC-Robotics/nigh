@@ -76,8 +76,8 @@ namespace unc::robotics::nigh::metric {
 // tuple_element is declared as a class and as a struct in some
 // libraries.  there's no way to avoid the mismatched tag warning
 // without just disabling it.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmismatched-tags"
+// #pragma GCC diagnostic push
+// #pragma GCC diagnostic ignored "-Wmismatched-tags"
 namespace std {
     template <std::size_t I, typename ... M>
     struct tuple_element<I, unc::robotics::nigh::metric::Cartesian<M...>>
@@ -88,7 +88,7 @@ namespace std {
         return metric.template get<I>();
     }
 }
-#pragma GCC diagnostic pop
+// #pragma GCC diagnostic pop
 
 
 #endif
