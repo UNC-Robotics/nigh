@@ -329,7 +329,7 @@ done
 echo "build plots: phony$plots" >&3
 echo "build test: phony$tests" >&3
 echo "build ctest: phony$ctests" >&3
-echo "build all: phony test ctests plots" >&3
+echo "build all: phony test ctest plots" >&3
 
 exec 3>&- # close build.ninja
 echo "Done.  type 'ninja' to start build"
