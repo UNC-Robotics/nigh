@@ -39,6 +39,7 @@
 
 #include <tuple>
 #include "metric.hpp"
+#include "cartesian_state_element.hpp"
 
 namespace unc::robotics::nigh::metric {
     template <typename ... M>
@@ -76,8 +77,10 @@ namespace unc::robotics::nigh::metric {
 // tuple_element is declared as a class and as a struct in some
 // libraries.  there's no way to avoid the mismatched tag warning
 // without just disabling it.
-// #pragma GCC diagnostic push
-// #pragma GCC diagnostic ignored "-Wmismatched-tags"
+#ifdef __clang__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmismatched-tags"
+#endif
 namespace std {
     template <std::size_t I, typename ... M>
     struct tuple_element<I, unc::robotics::nigh::metric::Cartesian<M...>>
@@ -88,7 +91,13 @@ namespace std {
         return metric.template get<I>();
     }
 }
-// #pragma GCC diagnostic pop
+#ifdef __clang__
+#pragma GCC diagnostic pop
+#endif
 
+
+#include "../impl/kdtree_batch/nearest_traversals.hpp"
+#include "../impl/kdtree_batch/regions.hpp"
+#include "../impl/kdtree_batch/traversals.hpp"
 
 #endif

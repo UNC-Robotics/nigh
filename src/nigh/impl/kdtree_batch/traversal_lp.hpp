@@ -97,12 +97,23 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
             assert(Get::part(c0->region()).max(axis) <= Get::part(c1->region()).min(axis));
 
             Distance split = (Get::part(c0->region()).max(axis) + Get::part(c1->region()).min(axis)) / 2;
+#ifndef NDEBUG
             {
+		bool correctSplit = true;
                 for (std::size_t i=0 ; i<batchSize/2 ; ++i)
-                    assert(Space::coeff(Get::part(tree.getKey(c0->elements()[i])), axis) < split);
+		    correctSplit &= Space::coeff(Get::part(tree.getKey(c0->elements()[i])), axis) < split;
                 for (std::size_t i=0 ; i<batchSize/2 ; ++i)
-                    assert(Space::coeff(Get::part(tree.getKey(c1->elements()[i])), axis) > split);
+		    correctSplit &= Space::coeff(Get::part(tree.getKey(c1->elements()[i])), axis) > split;
+		if (!correctSplit) {
+		    // std::cout << "SPLIT: " << axis << ": " << split << std::endl;
+		    // for (std::size_t i=0 ; i<batchSize/2 ; ++i)
+		    //     std::cerr << "c0[" << i << "]: " << tree.getKey(c0->elements()[i]).transpose() << std::endl;
+		    // for (std::size_t i=0 ; i<batchSize/2 ; ++i)
+		    //     std::cerr << "c1[" << i << "]: " << tree.getKey(c1->elements()[i]).transpose() << std::endl;
+		    assert(correctSplit);
+		}
             }
+#endif
             return tree.template alloc<LPBranch>(leaf, axis, split, c0, c1);
         }
 

@@ -114,7 +114,7 @@ namespace nigh_test {
                     EXPECT(set.find(std::make_pair(no_, i)) == set.end()) == false;
                 }
 
-                //std::cerr << "ending thread " << no_ << std::endl;
+                // std::cerr << "ending thread " << no_ << std::endl;
             } catch (...) {
                 eptr_ = std::current_exception();
             }

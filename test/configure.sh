@@ -2,6 +2,7 @@
 
 NN_SIZE=2000
 NN_SIZE_LINEAR=500
+NN_SIZE_CSCALE=8
 
 die () { echo "FATAL: $1" ; exit 1; }
 
@@ -120,7 +121,7 @@ add_ctest () {
 	    using State = $store;
 	    using Space = metric::Space<State, ${metric_type}>;
 	    Space space$args;
-	    nigh_test::runConcurrentTest<Strategy>(space, $N*8);
+	    nigh_test::runConcurrentTest<Strategy>(space, $N);
 	}
 	EOF
 }
@@ -267,8 +268,6 @@ for space in l1_2 l2_3 linf_7 so2_1 so2_7 so3 se3 se3r ; do
                             strategy_type="GNAT<>"
                             ;;
                     esac
-
-                    [[ $strategy = linear ]] && N=$NN_SIZE_LINEAR || N=$NN_SIZE
                     
                     for concurrency in $concurrency_list ; do
                         name="${space}_${state}_${scalar}_${value}_${strategy}_${concurrency}"
@@ -280,6 +279,8 @@ for space in l1_2 l2_3 linf_7 so2_1 so2_7 so3 se3 se3r ; do
                             nt) concurrency_type=NoThreadSafety ;;
                         esac
 
+                        [[ $strategy = linear ]] && N=$NN_SIZE_LINEAR || N=$NN_SIZE
+
                         add_test
 
                         if [[ $value = state && $concurrency = rw &&
@@ -287,6 +288,10 @@ for space in l1_2 l2_3 linf_7 so2_1 so2_7 so3 se3 se3r ; do
                                 ( $space = so2_7 && $state = eigen_vector ) ||
                                 ( $space = so3   && $state = eigen_quaternion ) ||
                                 ( $space = se3   && $state = tuple ) ) ]] ; then
+
+                            if [[ $strategy != gnat ]] ; then
+                                N=$((N * NN_SIZE_CSCALE))
+                            fi
 
                             add_ctest
 

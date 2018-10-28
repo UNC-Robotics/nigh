@@ -58,7 +58,7 @@ namespace unc::robotics::nigh::metric {
         }
 
         static Distance coeff(const Type& a, std::size_t index) {
-            assert(index < a.size());
+            assert(int(index) < a.size());
             return a[index];
         }
 
