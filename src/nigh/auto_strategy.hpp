@@ -40,6 +40,7 @@
 #include "nigh_forward.hpp"
 #include "linear.hpp"
 #include "kdtree_batch.hpp"
+#include "kdtree_median.hpp"
 #include "gnat.hpp"
 #include "metric/space.hpp"
 #include <type_traits>
@@ -49,17 +50,25 @@ namespace unc::robotics::nigh {
     // determine the best nearest neighbor strategy to use based upon
     // arguments.  The priority from highest to lowest is:
     //
-    // 1. the space is a decomposible metric space, then KDTreeBatch
-    //    is the best option.
+    // 1. the space is a decomposible metric space and we do not wish
+    //    to wait for potentially long rebuilds, then KDTreeBatch is
+    //    the best option.
     //
-    // 2. the space is NOT a decomposible metric spance, and there is
+    // 2. the space is a decomposible metric space and pauses are ok,
+    //    and we're not operating concurrently then KDTreeMedian may
+    //    be the best option.  KDTreeBatch may perform better in
+    //    practice, but the forced median balance of KDTreeMedian
+    //    should provide better worst-case performance.
+    //
+    // 3. the space is NOT a decomposible metric spance, and there is
     //    no need for concurrent inserts, then GNAT is the best
     //    option.
     //
-    // 3. otherwise, Linear is selected.  Note that is this case GNAT
+    // 4. otherwise, Linear is selected.  Note that is this case GNAT
     //    may perform better depending on concurrent demands placed
     //    upon the data structure.
-    template <typename Space, typename Concurrency, bool = metric::is_space_v<Space>>
+    template <typename Space, typename Concurrency, bool pauseless,
+              bool = metric::is_space_v<Space>>
     struct auto_strategy;
     // {
     //     static_assert(
@@ -67,26 +76,42 @@ namespace unc::robotics::nigh {
     //         "could not automatically determine best strategy for concurrency and space");
     // };
 
-    template <typename Space, typename Concurrency>
-    using auto_strategy_t = typename auto_strategy<Space, Concurrency>::type;
+    // The parameters for the automatic_strategy selection are:
+    //
+    //   Space: the metric space for the nearest neighbor
+    //   Concurrency: concurrency level desired
+    //   pauseless: true if the algorithm should avoid occasional long
+    //       rebuild operations.
+    template <typename Space, typename Concurrency, bool pauseless = true>
+    using auto_strategy_t = typename auto_strategy<Space, Concurrency, pauseless>::type;
 
-    template <typename Space, typename Concurrency>
-    struct auto_strategy<Space, Concurrency, true> {
+    template <typename Space, typename Concurrency, bool pauseless>
+    struct auto_strategy<Space, Concurrency, pauseless, true> {
         using type = KDTreeBatch<>;
     };
 
-    template <typename Space>
-    struct auto_strategy<Space, NoThreadSafety, false> {
+    template <typename Space, bool pauseless>
+    struct auto_strategy<Space, NoThreadSafety, pauseless, false> {
+        using type = GNAT<>;
+    };
+
+    template <typename Space, bool pauseless>
+    struct auto_strategy<Space, ConcurrentRead, pauseless, false> {
         using type = GNAT<>;
     };
 
     template <typename Space>
-    struct auto_strategy<Space, ConcurrentRead, false> {
-        using type = GNAT<>;
+    struct auto_strategy<Space, NoThreadSafety, false, true> {
+        using type = KDTreeMedian<>;
     };
 
     template <typename Space>
-    struct auto_strategy<Space, Concurrent, false> {
+    struct auto_strategy<Space, ConcurrentRead, false, true> {
+        using type = KDTreeMedian<>;
+    };
+
+    template <typename Space, bool pauseless>
+    struct auto_strategy<Space, Concurrent, pauseless, false> {
         using type = Linear;
     };
 }

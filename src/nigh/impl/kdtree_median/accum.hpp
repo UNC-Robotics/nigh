@@ -34,28 +34,14 @@
 //! @author Jeff Ichnowski
 
 #pragma once
-#ifndef NIGH_IMPL_KDTREE_BATCH_REGION_HPP
-#define NIGH_IMPL_KDTREE_BATCH_REGION_HPP
+#ifndef NIGH_IMPL_KDTREE_MEDIAN_ACCUM_HPP
+#define NIGH_IMPL_KDTREE_MEDIAN_ACCUM_HPP
 
-#include <Eigen/Dense>
+#include "../root_get.hpp"
 
-namespace unc::robotics::nigh::impl::kdtree_batch {
-
-    template <typename Tree, typename Key, typename Metric, typename Get>
-    class Traversal;
-
-    template <typename Key, typename Metric, typename Concurrency>
-    class Region;
-    // public:
-    //     Region() {}
-    //     template <typename State>
-    //     Region(const State& q) {}
-
-    //     template <typename State>
-    //     void grow(const State& q) {}
-    // };
-
-
+namespace unc::robotics::nigh::impl::kdtree_median {
+    template <class Key, class Metric, class Get = RootGet>
+    class Accum;
 }
 
 #endif

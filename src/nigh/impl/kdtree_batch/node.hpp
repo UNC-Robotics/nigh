@@ -37,8 +37,8 @@
 #ifndef NIGH_IMPL_KDTREE_BATCH_NODE_HPP
 #define NIGH_IMPL_KDTREE_BATCH_NODE_HPP
 
-#include "region.hpp"
-#include "regions.hpp"
+#include "../region.hpp"
+#include "../regions.hpp"
 
 namespace unc::robotics::nigh::impl::kdtree_batch {
     template <std::size_t I, std::size_t N, typename Tree, typename Key, typename Metric, typename Get>
@@ -61,8 +61,8 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
         static constexpr int kLeafAxis = -1;
 
         // Leaf
-        template <typename Tree, typename Get>
-        Node(const Space& space, const Traversal<Tree, Key, Metric, Get>& traversal, const Key& q)
+        template <typename Traversal>
+        Node(const Space& space, const Traversal& traversal, const Key& q)
             : NodeRegion(space, traversal, q)
             , axis_(kLeafAxis)
         {

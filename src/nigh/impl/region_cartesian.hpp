@@ -34,13 +34,13 @@
 //! @author Jeff Ichnowski
 
 #pragma once
-#ifndef NIGH_IMPL_KDTREE_BATCH_REGION_CARTESIAN_HPP
-#define NIGH_IMPL_KDTREE_BATCH_REGION_CARTESIAN_HPP
+#ifndef NIGH_IMPL_REGION_CARTESIAN_HPP
+#define NIGH_IMPL_REGION_CARTESIAN_HPP
 
 #include "region.hpp"
-#include "../../metric/cartesian_state_element.hpp"
+#include "../metric/cartesian_state_element.hpp"
 
-namespace unc::robotics::nigh::impl::kdtree_batch {
+namespace unc::robotics::nigh::impl {
 
     template <std::size_t I, typename Key, typename Metric, typename Concurrency>
     using cartesian_region_element_t = Region<
@@ -61,8 +61,8 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
         using Base = std::tuple<cartesian_region_element_t<I, Key, Metric, Concurrency>...>;
 
     public:
-        template <typename Tree, typename Get>
-        CartesianRegion(const Space& space, const Traversal<Tree, Key, Metric, Get>& traversal, const Key& key)
+        template <typename Traversal>
+        CartesianRegion(const Space& space, const Traversal& traversal, const Key& key)
             : Base(
                 (cartesian_region_element_t<I, Key, Metric, Concurrency>(
                     space.template get<I>(),

@@ -34,52 +34,43 @@
 //! @author Jeff Ichnowski
 
 #pragma once
-#ifndef NIGH_TEST_IMPL_SAMPLER_CARTESIAN_HPP
-#define NIGH_TEST_IMPL_SAMPLER_CARTESIAN_HPP
+#ifndef NIGH_IMPL_BITS_HPP
+#define NIGH_IMPL_BITS_HPP
 
-#include "sampler.hpp"
-#include <nigh/metric/space_cartesian.hpp>
-#include <nigh/se3_space.hpp>
+namespace unc::robotics::nigh::impl {
+    
+    // TODO: provide alternate implementations when compiler does not
+    // have the builtin.
+    
+    constexpr int clz(unsigned x) {
+        return __builtin_clz(x);
+    }
 
-namespace nigh_test {
-    using namespace unc::robotics::nigh::metric;
+    constexpr int clz(unsigned long x) {
+        return __builtin_clzl(x);
+    }
+    
+    constexpr int clz(unsigned long long x) {
+        return __builtin_clzll(x);
+    }
 
-    template <typename State, typename Metric, typename Indices>
-    struct CartesianSampler;
+    constexpr int popcount(unsigned x) {
+        return __builtin_popcount(x);
+    }
 
-    template <std::size_t I, typename S, typename M>
-    using cartesian_sampler_element_t = Sampler<
-        cartesian_state_element_t<I, S>,
-        cartesian_element_t<I, M>>;
+    constexpr int popcount(unsigned long x) {
+        return __builtin_popcountl(x);
+    }
 
-    template <typename State, typename Metric, std::size_t ... I>
-    struct CartesianSampler<State, Metric, std::index_sequence<I...>>
-        : std::tuple<cartesian_sampler_element_t<I, State, Metric>...>
-    {
-        static_assert(sizeof...(I) > 0, "empty cartesian metric");
-        using Base = std::tuple<cartesian_sampler_element_t<I, State, Metric>...>;
+    constexpr int popcount(unsigned long long x) {
+        return __builtin_popcountll(x);
+    }
 
-        CartesianSampler(const Space<State, Metric>& space)
-            : Base(cartesian_sampler_element_t<I, State, Metric>(space.template get<I>())...)
-        {
-        }
-
-        template <typename RNG>
-        State operator() (RNG& rng){
-            State q;
-            ((std::get<I>(q) = std::get<I>(*this)(rng)), ...);
-            return q;
-        }
-    };
-
-    template <typename State, typename ... M>
-    struct Sampler<State, Cartesian<M...>>
-        : CartesianSampler<State, Cartesian<M...>, std::index_sequence_for<M...>>
-    {
-        using Base = CartesianSampler<State, Cartesian<M...>, std::index_sequence_for<M...>>;
-        using Base::Base;
-    };
-
+    template <typename T>
+    constexpr std::enable_if_t<std::is_integral<T>::value, int>
+    log2(T x) {
+        return sizeof(x)*8 - 1 - clz(x);
+    }
 }
 
 #endif

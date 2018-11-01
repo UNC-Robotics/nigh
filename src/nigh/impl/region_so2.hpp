@@ -33,24 +33,21 @@
 
 //! @author Jeff Ichnowski
 
-#ifdef NIGH_IMPL_KDTREE_BATCH_NODE_HPP
-#ifdef NIGH_METRIC_LP_HPP
-#include "region_lp.hpp"
-#endif
+#pragma once
+#ifndef NIGH_IMPL_REGION_SO2_HPP
+#define NIGH_IMPL_REGION_SO2_HPP
 
-#ifdef NIGH_METRIC_SO3_HPP
-#include "region_so3.hpp"
-#endif
+#include "region.hpp"
 
-#ifdef NIGH_METRIC_SO2_HPP
-#include "region_so2.hpp"
-#endif
+namespace unc::robotics::nigh::impl {
 
-#ifdef NIGH_METRIC_SCALED_HPP
-#include "region_scaled.hpp"
-#endif
+    template <typename Key, int p, typename Concurrency>
+    class Region<Key, metric::SO2<p>, Concurrency> {
+        using Space = metric::Space<Key, metric::SO2<p>>;
+    public:
+        template <typename Traversal>
+        Region(const Space&, const Traversal&, const Key& q) {}
+    };
+}
 
-#ifdef NIGH_METRIC_CARTESIAN_HPP
-#include "region_cartesian.hpp"
-#endif
 #endif

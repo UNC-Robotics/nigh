@@ -39,19 +39,9 @@
 
 #include "traversal.hpp"
 #include "types.hpp"
+#include "../cartesian_get.hpp"
 
 namespace unc::robotics::nigh::impl::kdtree_batch {
-    template <typename ParentGet, std::size_t I>
-    struct CartesianGet {
-        template <typename T>
-        static constexpr decltype(auto) part(T&& x) {
-            return std::get<I>(ParentGet::part(std::forward<T>(x)));
-        }
-        // template <typename T>
-        // constexpr auto operator()(T&& t) const -> decltype(std::get<I>(ParentGet::operator()(std::forward<T>(t)))) {
-        //     return std::get<I>(ParentGet::operator()(std::forward<T>(t)));
-        // }
-    };
 
     template <std::size_t I, std::size_t N, typename Tree, typename Key, typename Metric, typename Get>
     struct CartesianHelper {

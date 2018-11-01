@@ -47,6 +47,10 @@ namespace nigh_test {
     struct Sampler<State, Scaled<Metric, Weight>>
         : Sampler<State, Metric>
     {
+        Sampler(const Space<State, Scaled<Metric, Weight>>& space)
+            : Sampler<State, Metric>(space.space())
+        {
+        }
     };
 }
 

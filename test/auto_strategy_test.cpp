@@ -33,26 +33,60 @@
 
 //! @author Jeff Ichnowski
 
-#pragma once
-#ifndef NIGH_IMPL_KDTREE_BATCH_REGION_SO3_HPP
-#define NIGH_IMPL_KDTREE_BATCH_REGION_SO3_HPP
+#include <nigh/auto_strategy.hpp>
+#include <nigh/lp_space.hpp>
+#include <type_traits>
+#include "test.hpp"
 
-#include "region.hpp"
-#include "../so3.hpp"
-#include "../constants.hpp"
-#include <Eigen/Dense>
-
-namespace unc::robotics::nigh::impl::kdtree_batch {
-
-    // TODO: Concurrent version
-    template <typename Key, typename Concurrency>
-    class Region<Key, metric::SO3, Concurrency> {
-        using Space = metric::Space<Key, metric::SO3>;
-    public:
-        template <typename Tree, typename Get>
-        Region(const Space&, const Traversal<Tree, Key, metric::SO3, Get>&, const Key& q) {
-        }
-    };
+namespace nigh_test {
+    class NonMetricSpace;
 }
 
-#endif
+TEST(strategies) {    
+    using namespace unc::robotics::nigh;
+
+    EXPECT((
+        std::is_same_v<
+            auto_strategy_t<metric::L2Space<double, 3>, Concurrent, true>,
+            KDTreeBatch<>>)) == true;
+
+    EXPECT((
+        std::is_same_v<
+            auto_strategy_t<metric::L2Space<double, 3>, NoThreadSafety, true>,
+            KDTreeBatch<>>)) == true;
+
+    EXPECT((
+        std::is_same_v<
+            auto_strategy_t<metric::L2Space<double, 3>, ConcurrentRead, true>,
+            KDTreeBatch<>>)) == true;
+
+    EXPECT((
+        std::is_same_v<
+            auto_strategy_t<metric::L2Space<double, 3>, Concurrent, false>,
+            KDTreeBatch<>>)) == true;
+
+    EXPECT((
+        std::is_same_v<
+            auto_strategy_t<metric::L2Space<double, 3>, NoThreadSafety, false>,
+            KDTreeMedian<>>)) == true;
+
+    EXPECT((
+        std::is_same_v<
+            auto_strategy_t<metric::L2Space<double, 3>, ConcurrentRead, false>,
+            KDTreeMedian<>>)) == true;
+
+    EXPECT((
+        std::is_same_v<
+            auto_strategy_t<nigh_test::NonMetricSpace, Concurrent, false>,
+            Linear>)) == true;
+
+    EXPECT((
+        std::is_same_v<
+            auto_strategy_t<nigh_test::NonMetricSpace, NoThreadSafety, false>,
+            GNAT<>>)) == true;
+
+    EXPECT((
+        std::is_same_v<
+            auto_strategy_t<nigh_test::NonMetricSpace, ConcurrentRead, false>,
+            GNAT<>>)) == true;
+}

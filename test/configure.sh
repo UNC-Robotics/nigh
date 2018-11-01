@@ -68,6 +68,19 @@ cat <<-EOF >&3
 
 	EOF
 
+# Generated files are first created as "$1.tmp" then mv'd to "$1" if
+# the differ from the existing generated test.  This behavior allows
+# the script to be rerun without causing a full rebuild due to
+# timestamp changes on the generated files.
+replace_tmp () {
+    if ! cmp -s "$1" "$1.tmp" ; then
+        echo "Generated $1"
+        mv "$1.tmp" "$1"
+    else
+        rm "$1.tmp"
+    fi
+}
+
 # Adds a test
 add_test () {
     tests+=" $test"
@@ -77,7 +90,7 @@ add_test () {
 	build $test: phony \$builddir/$test.success
 	EOF
 
-    cat <<-EOF > "$test.cpp" 
+    cat <<-EOF > "$test.cpp.tmp" 
 	// This test case was automatically generated
 	// $test.cpp
 	$(printf "#include \"../%s.hpp\"\n" $includes)
@@ -99,6 +112,8 @@ add_test () {
 	    runTest<$value_type, Space, $member_type, Concurrency, Strategy>(space, N, K);
 	}
 	EOF
+
+    replace_tmp "$test.cpp"
 }
 
 # Adds a concurrency test
@@ -111,7 +126,7 @@ add_ctest () {
 	build \$builddir/$ctest.success: ctest \$builddir/$ctest
 	build $ctest: phony \$builddir/$ctest.success
 	EOF
-    cat <<-EOF > "$ctest.cpp"
+    cat <<-EOF > "$ctest.cpp.tmp"
 	$(printf "#include \"../%s.hpp\"\n" $includes)
 	#include "../concurrent_test_template.hpp"
 	#include <nigh/${strat_include}>
@@ -124,6 +139,8 @@ add_ctest () {
 	    nigh_test::runConcurrentTest<Strategy>(space, $N);
 	}
 	EOF
+
+    replace_tmp "$ctest.cpp"
 }
 
 # Adds a benchmark 
@@ -137,7 +154,7 @@ add_bench () {
 	build $bench: phony \$builddir/$bench.dat
 	EOF
 
-    cat <<-EOF > "$bench.cpp"
+    cat <<-EOF > "$bench.cpp.tmp"
 	#include "../bench_template.hpp"
 	int main(int argc, char *argv[]) {
 	    using namespace unc::robotics::nigh;
@@ -153,6 +170,8 @@ add_bench () {
 	    runBench<State>(argc, argv, space, nigh_test::Identity{}, Concurrency{}, Strategy{});
 	}
 	EOF
+
+    replace_tmp "$bench.cpp"
 }
 
 ######################################################################
@@ -165,7 +184,7 @@ for src in *_test.cpp ; do
     cat <<-EOF >&3
 	build \$builddir/$base: cxx $src
 	build \$builddir/$base.success: test \$builddir/$base
-	build $base: phony \$builddir/$base
+	build $base: phony \$builddir/$base.success
 	EOF
 done
 
@@ -173,12 +192,12 @@ done
 # Create generated test cases and benchmarks
 GENDIR="generated"
 mkdir -p $GENDIR
-for space in l1_2 l2_3 linf_7 so2_1 so2_7 so3 se3 se3r ; do
+for space in l1_2 l2_3 linf_7 so2_1 so2_7 so3 se3 se3r scaled_se3_7_3 ; do
     state_list="eigen_vector"
     value_list="state"
     case $space in
         l*)
-            metric=${space%_*}
+            #metric=${space%_*}
             dim=${space#*_}
             metric_type="LP<$dim>"
             includes="sampler_lp"
@@ -186,27 +205,34 @@ for space in l1_2 l2_3 linf_7 so2_1 so2_7 so3 se3 se3r ; do
             [[ $space = "l2_3" ]] && value_list+=" node nodeptr stateptr"
             ;;
         so2*)
-            metric=${space%_*}
+            #metric=${space%_*}
             dim=${space#*_}
             metric_type="SO2<$dim>"
             includes="sampler_so2"
             [[ $space = "so2_1" ]] && state_list+=" scalar";
             ;;
         so3)
-            metric=$space
+            #metric=$space
             dim=4
             metric_type="SO3"
             includes="sampler_so3"
             state_list="eigen_quaternion eigen_vector"
             ;;
         se3*)
-            metric=$space
+            #metric=$space
             dim=-1
             metric_type="Cartesian<SO3, LP<2>>"
-            [[ $metric = se3r ]] && metric_type="Cartesian<LP<2>, SO3>"
+            [[ $space = se3r ]] && metric_type="Cartesian<LP<2>, SO3>"
             includes="sampler_lp sampler_so3 sampler_cartesian"
             state_list="tuple pair custom"
-            [[ $metric = se3r ]] && state_list="tuple"
+            [[ $space = se3r ]] && state_list="tuple"
+            ;;
+        scaled_se3_7_3)
+            #metric=$space
+            dim=-1
+            metric_type="Cartesian<RatioScaled<SO3, 7>, RatioScaled<LP<2>, 3>>"
+            includes="sampler_lp sampler_so3 sampler_cartesian sampler_scaled"
+            state_list="tuple"
             ;;
     esac
     
@@ -226,7 +252,7 @@ for space in l1_2 l2_3 linf_7 so2_1 so2_7 so3 se3 se3r ; do
                 scalar) store="$scalar_type" ;;
                 custom) store="nigh_test::SE3State<$scalar_type>" ;;
                 tuple|pair)
-                    if [[ $metric = se3 ]]
+                    if [[ $space != se3r ]]
                     then store="std::$state<Eigen::Quaternion<$scalar_type>, Eigen::Matrix<$scalar_type, 3, 1>>" 
                     else store="std::$state<Eigen::Matrix<$scalar_type, 3, 1>, Eigen::Quaternion<$scalar_type>>" ; fi ;;
             esac
@@ -250,7 +276,7 @@ for space in l1_2 l2_3 linf_7 so2_1 so2_7 so3 se3 se3r ; do
                         ;;
                 esac
                 
-                for strategy in batch_8 linear gnat ; do
+                for strategy in batch_8 median linear gnat ; do
                     concurrency_list="rw"
                     [[ $space = l2_3 && $state = eigen_vector && $value = state ]] &&
                         concurrency_list="rw ro nt"
@@ -262,6 +288,10 @@ for space in l1_2 l2_3 linf_7 so2_1 so2_7 so3 se3 se3r ; do
                         batch_*)
                             strat_include="kdtree_batch.hpp"
                             strategy_type="KDTreeBatch<${strategy#*_}>"
+                            ;;
+                        median)
+                            strat_include="kdtree_median.hpp"
+                            strategy_type="KDTreeMedian<>"
                             ;;
                         gnat)
                             strat_include="gnat.hpp"
@@ -287,9 +317,10 @@ for space in l1_2 l2_3 linf_7 so2_1 so2_7 so3 se3 se3r ; do
                               ( ( $space = l2_3  && $state = eigen_vector ) ||
                                 ( $space = so2_7 && $state = eigen_vector ) ||
                                 ( $space = so3   && $state = eigen_quaternion ) ||
-                                ( $space = se3   && $state = tuple ) ) ]] ; then
+                                ( $space = se3   && $state = tuple ) ||
+                                ( $space = scaled_se3_7_3 && $state = tuple) ) ]] ; then
 
-                            if [[ $strategy != gnat ]] ; then
+                            if [[ $strategy == linear || $strategy =~ batch_* ]] ; then
                                 N=$((N * NN_SIZE_CSCALE))
                             fi
 
@@ -309,16 +340,17 @@ done # for space in ...
 ######################################################################
 # Create plot rules
 plots=""
-for space in l2_3 so3 so2_7 se3 ; do
+for space in l2_3 so3 so2_7 se3 scaled_se3_7_3 ; do
     plots+=" \$builddir/$space.svg"
     echo -n "build \$builddir/$space.svg: plot " >&3
-    state=eigen_vector
-    case $space in
-        so3) state=eigen_quaternion ;;
-        se3) state=tuple ;;
-    esac
-    for strategy in batch_8 linear gnat ; do
-        echo -n " \$builddir/$GENDIR/${space}_${state}_double_state_${strategy}_rw_bench.dat" >&3
+    # state=eigen_vector
+    # case $space in
+    #     so3) state=eigen_quaternion ;;
+    #     se3) state=tuple ;;
+    #     scaled_se3_7_3) state=tuple ;;
+    # esac
+    for strategy in batch_8 median linear gnat ; do
+        echo -n " \$builddir/$GENDIR/${space}_double_${strategy}_bench.dat" >&3
     done
     printf "\n  title = " >&3
     case $space in
@@ -326,6 +358,7 @@ for space in l2_3 so3 so2_7 se3 ; do
         so3)   echo "'SO(3)'"        >&3 ;;
         so2_7) echo "'SO(2)x5'"      >&3 ;;
         se3)   echo "'SE(3) 1:1'"    >&3 ;;
+        scaled_se3_7_3) echo "'SE(3) 7:3'" >&3 ;;
     esac
 done
 

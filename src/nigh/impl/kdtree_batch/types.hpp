@@ -37,8 +37,8 @@
 #ifndef NIGH_IMPL_KDTREE_BATCH_TYPES_HPP
 #define NIGH_IMPL_KDTREE_BATCH_TYPES_HPP
 
-#include "region.hpp"
-#include "regions.hpp"
+#include "../region.hpp"
+#include "../regions.hpp"
 #include "../../nigh_forward.hpp"
 #include "strategy.hpp"
 #include "node.hpp"

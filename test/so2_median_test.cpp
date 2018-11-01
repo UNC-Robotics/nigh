@@ -54,7 +54,7 @@ TEST(random_splits) {
     for (std::size_t iter = 0 ; iter < 100000 ; ++iter) {
         std::generate(vals.begin(), vals.end(), [&] { return urd(rng); });
 
-        auto [dist, split] = kdtree_batch::so2split(vals);
+        auto [dist, split] = so2::split(vals);
         // for (std::size_t i=0 ; i<N ; ++i)
         //     std::cerr << vals[i] << ", ";
         // std::cerr << "split = " << split << ", " << split + PI<Scalar> << std::endl;
@@ -88,7 +88,7 @@ TEST(split_with_duplicated_value) {
     for (std::size_t i=0 ; i<N ; ++i)
         values[i] = vectors[i][0];
 
-    auto [dist, split] = kdtree_batch::so2split(values);
+    auto [dist, split] = so2::split(values);
 
     EXPECT(split) == -2.2128000000000001;
     EXPECT(dist) == Approx(-1.9412700000000001 - -2.5425399999999998);
@@ -109,7 +109,7 @@ TEST(split_with_duplicated_value_2) {
             -1.26892,
         }};
 
-    auto [dist, split] = kdtree_batch::so2split(values);
+    auto [dist, split] = so2::split(values);
     EXPECT(split) == -1.26729;
 }
 
@@ -122,7 +122,7 @@ TEST(split_evenly_spaced) {
         for (std::size_t i = 0 ; i < n ; ++ i)
             vals[i] = 2*PI<double> * i / n;
 
-        auto [dist, split] = kdtree_batch::so2split(vals);
+        auto [dist, split] = so2::split(vals);
 
         EXPECT(std::abs(dist - (PI<double> + PI<double>*2/n))) < 1e-15;
 

@@ -38,10 +38,10 @@
 #define NIGH_IMPL_KDTREE_BATCH_TRAVERSAL_SO3_HPP
 
 #include "../so3.hpp"
+#include "../so3_region.hpp"
 #include "traversal.hpp"
 #include "so3_branch.hpp"
 #include "so3_root.hpp"
-#include "so3_region.hpp"
 #include "types.hpp"
 #include <numeric>
 

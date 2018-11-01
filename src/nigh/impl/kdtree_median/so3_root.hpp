@@ -34,24 +34,36 @@
 //! @author Jeff Ichnowski
 
 #pragma once
-#ifndef NIGH_IMPL_KDTREE_BATCH_REGION_SCALED_HPP
-#define NIGH_IMPL_KDTREE_BATCH_REGION_SCALED_HPP
+#ifndef NIGH_IMPL_KDTREE_MEDIAN_SO3_ROOT_HPP
+#define NIGH_IMPL_KDTREE_MEDIAN_SO3_ROOT_HPP
 
-#include "region.hpp"
+#include "node.hpp"
 
-namespace unc::robotics::nigh::impl::kdtree_batch {
+namespace unc::robotics::nigh::impl::kdtree_median {
+    class SO3Root : public Node {
+        std::array<Node*, 4> children_{{}};
+        std::array<std::size_t, 3> offsets_;
 
-    template <typename Key, typename Metric, typename Weight, typename Concurrency>
-    class Region<Key, metric::Scaled<Metric, Weight>, Concurrency>
-        : public Region<Key, Metric, Concurrency>
-    {
-        using Space = metric::Space<Key, metric::Scaled<Metric, Weight>>;
-        using Base = Region<Key, Metric, Concurrency>;
     public:
-        template <typename Tree, typename Get>
-        Region(const Space& space, const Traversal<Tree, Key, metric::Scaled<Metric, Weight>, Get>& traversal, const Key& q)
-            : Base(space.space(), traversal.traversal(), q)
+        inline SO3Root(unsigned axis)
+            : Node(axis)
         {
+        }
+
+        inline auto& offset(int i) {
+            return offsets_[i];
+        }
+
+        inline std::size_t offset(int i) const {
+            return offsets_[i];
+        }
+
+        inline auto& child(int i) {
+            return children_[i];
+        }
+
+        inline const auto& child(int i) const {
+            return children_[i];
         }
     };
 }

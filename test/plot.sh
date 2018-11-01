@@ -18,6 +18,16 @@ shift 2
     echo "set key top left"
     echo "set format x '10^{%T}'"
 
+    echo "ymax = 0"
+    for file in $@ ; do
+        title=$(sed -n '/^# Strategy = / { s/.*= // ; p ; }' "$file")
+        if [[ $title != Linear ]] ; then
+            echo "stats '$file' u 1:4 nooutput"
+            echo "ymax = STATS_max_y > ymax ? STATS_max_y : ymax"
+        fi
+    done
+    echo "set yrange [0:ymax]"
+    
     sep="plot "
     for file in $@ ; do
         title=$(sed -n '/^# Strategy = / { s/.*= // ; p ; }' "$file")

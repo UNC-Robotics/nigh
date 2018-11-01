@@ -57,6 +57,7 @@ namespace unc::robotics::nigh::metric {
         using Base::Base;
         using Base::dimensions;
         using Base::isValid;
+        using Base::weight;
 
         const Space<S, M> space() const {
             return *this;

@@ -49,8 +49,6 @@ namespace unc::robotics::nigh::metric {
     struct is_metric<metric::SO2<p>> : std::true_type {};
 }
 
-#include "../impl/kdtree_batch/traversals.hpp"
-#include "../impl/kdtree_batch/nearest_traversals.hpp"
-#include "../impl/kdtree_batch/regions.hpp"
+#include "../impl/metric_specializations.hpp"
 
 #endif

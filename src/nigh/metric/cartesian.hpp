@@ -72,6 +72,15 @@ namespace unc::robotics::nigh::metric {
         : std::bool_constant<(is_metric_v<M> && ...)>
     {
     };
+
+    template <class C>
+    struct cartesian_size;
+
+    template <class ... M>
+    struct cartesian_size<Cartesian<M...>> : std::integral_constant<std::size_t, sizeof...(M)> {};
+
+    template <class C>
+    constexpr std::size_t cartesian_size_v = cartesian_size<C>::value;
 }
 
 // tuple_element is declared as a class and as a struct in some
@@ -95,9 +104,6 @@ namespace std {
 #pragma GCC diagnostic pop
 #endif
 
-
-#include "../impl/kdtree_batch/nearest_traversals.hpp"
-#include "../impl/kdtree_batch/regions.hpp"
-#include "../impl/kdtree_batch/traversals.hpp"
+#include "../impl/metric_specializations.hpp"
 
 #endif

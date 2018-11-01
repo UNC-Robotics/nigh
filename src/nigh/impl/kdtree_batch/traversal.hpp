@@ -37,14 +37,9 @@
 #ifndef NIGH_IMPL_KDTREE_BATCH_TRAVERSAL_HPP
 #define NIGH_IMPL_KDTREE_BATCH_TRAVERSAL_HPP
 
-namespace unc::robotics::nigh::impl::kdtree_batch {
-    struct RootGet {
-        template <typename T>
-        static constexpr T& part(T& x) { return x; }
-        template <typename T>
-        static constexpr const T& part(const T& x) { return x; }
-    };
+#include "../root_get.hpp"
 
+namespace unc::robotics::nigh::impl::kdtree_batch {
     template <typename Tree, typename Key = typename Tree::Key, typename Metric = typename Tree::Metric, typename Get = RootGet>
     class Traversal;
 }

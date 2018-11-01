@@ -34,53 +34,56 @@
 //! @author Jeff Ichnowski
 
 #pragma once
-#ifndef NIGH_TEST_IMPL_SAMPLER_CARTESIAN_HPP
-#define NIGH_TEST_IMPL_SAMPLER_CARTESIAN_HPP
+#ifndef NIGH_IMPL_SO3_REGION_HPP
+#define NIGH_IMPL_SO3_REGION_HPP
 
-#include "sampler.hpp"
-#include <nigh/metric/space_cartesian.hpp>
-#include <nigh/se3_space.hpp>
+#include "region.hpp"
+#include "so3.hpp"
+#include "constants.hpp"
+#include <Eigen/Dense>
 
-namespace nigh_test {
-    using namespace unc::robotics::nigh::metric;
+namespace unc::robotics::nigh::impl {
 
-    template <typename State, typename Metric, typename Indices>
-    struct CartesianSampler;
+    template <typename Key>
+    class SO3Region {
+        using Distance = typename metric::Space<Key, metric::SO3>::Distance;
 
-    template <std::size_t I, typename S, typename M>
-    using cartesian_sampler_element_t = Sampler<
-        cartesian_state_element_t<I, S>,
-        cartesian_element_t<I, M>>;
+        Eigen::Matrix<Distance, 2, 3> min_;
+        Eigen::Matrix<Distance, 2, 3> max_;
 
-    template <typename State, typename Metric, std::size_t ... I>
-    struct CartesianSampler<State, Metric, std::index_sequence<I...>>
-        : std::tuple<cartesian_sampler_element_t<I, State, Metric>...>
-    {
-        static_assert(sizeof...(I) > 0, "empty cartesian metric");
-        using Base = std::tuple<cartesian_sampler_element_t<I, State, Metric>...>;
-
-        CartesianSampler(const Space<State, Metric>& space)
-            : Base(cartesian_sampler_element_t<I, State, Metric>(space.template get<I>())...)
+    public:
+        SO3Region() = delete;
+        SO3Region(const SO3Region& region)
+            : min_(region.min_)
+            , max_(region.max_)
         {
         }
 
-        template <typename RNG>
-        State operator() (RNG& rng){
-            State q;
-            ((std::get<I>(q) = std::get<I>(*this)(rng)), ...);
-            return q;
+        SO3Region(const Key& q, int vol) {
+            for (int a=0 ; a<3 ; ++a)
+                min_.col(a) = so3::project(q, vol, a);
+            max_ = min_;
+        }
+
+        void grow(const Key& q, int vol) {
+            for (int a=0 ; a<3 ; ++a) {
+                Eigen::Matrix<Distance, 2, 1> c = so3::project(q, vol, a);
+                assert(-SQRT1_2<Distance> <= c[0] && c[0] <= SQRT1_2<Distance>);
+                assert(c[1] >= SQRT1_2<Distance>);
+                if (c[0] < min_(0, a))
+                    min_.col(a) = c;
+                if (c[0] > max_(0, a))
+                    max_.col(a) = c;
+            }
+        }
+
+        Distance selectAxis(unsigned *axis, int vol) const {
+            assert(vol != -1);
+            Eigen::Matrix<Distance, 1, 3> dots = min_.cwiseProduct(max_).colwise().sum();
+            assert((dots.array() >= Distance(0)).all());
+            return std::acos(dots.minCoeff(axis));
         }
     };
-
-    template <typename State, typename ... M>
-    struct Sampler<State, Cartesian<M...>>
-        : CartesianSampler<State, Cartesian<M...>, std::index_sequence_for<M...>>
-    {
-        using Base = CartesianSampler<State, Cartesian<M...>, std::index_sequence_for<M...>>;
-        using Base::Base;
-    };
-
 }
 
 #endif
-

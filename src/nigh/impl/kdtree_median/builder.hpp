@@ -34,54 +34,57 @@
 //! @author Jeff Ichnowski
 
 #pragma once
-#ifndef NIGH_IMPL_KDTREE_BATCH_SO3_REGION_HPP
-#define NIGH_IMPL_KDTREE_BATCH_SO3_REGION_HPP
+#ifndef NIGH_IMPL_KDTREE_MEDIAN_BUILDER_HPP
+#define NIGH_IMPL_KDTREE_MEDIAN_BUILDER_HPP
 
-#include "region.hpp"
-#include "../so3.hpp"
-#include "../constants.hpp"
-#include <Eigen/Dense>
+#include "node.hpp"
+#include "accum.hpp"
+#include "accums.hpp"
 
-namespace unc::robotics::nigh::impl::kdtree_batch {
+namespace unc::robotics::nigh::impl::kdtree_median {
+    template <typename Tree>
+    class Builder {
+        using Key = typename Tree::Key;
+        using Metric = typename Tree::Metric;
 
-    template <typename Key>
-    class SO3Region {
-        using Distance = typename metric::Space<Key, metric::SO3>::Distance;
+        Tree& tree_;
 
-        Eigen::Matrix<Distance, 2, 3> min_;
-        Eigen::Matrix<Distance, 2, 3> max_;
-
+        Accum<Key, Metric> accum_;
+        
     public:
-        SO3Region() = delete;
-        SO3Region(const SO3Region& region)
-            : min_(region.min_)
-            , max_(region.max_)
+        Builder(Tree& tree)
+            : tree_(tree)
         {
         }
 
-        SO3Region(const Key& q, int vol) {
-            for (int a=0 ; a<3 ; ++a)
-                min_.col(a) = so3::project(q, vol, a);
-            max_ = min_;
+        template <class T, class ... Args>
+        T* allocate(Args&& ... args) {
+            return tree_.blocks_.template allocate<T>(std::forward<Args>(args)...);
         }
 
-        void grow(const Key& q, int vol) {
-            for (int a=0 ; a<3 ; ++a) {
-                Eigen::Matrix<Distance, 2, 1> c = so3::project(q, vol, a);
-                assert(-SQRT1_2<Distance> <= c[0] && c[0] <= SQRT1_2<Distance>);
-                assert(c[1] >= SQRT1_2<Distance>);
-                if (c[0] < min_(0, a))
-                    min_.col(a) = c;
-                if (c[0] > max_(0, a))
-                    max_.col(a) = c;
-            }
+        decltype(auto) getKey(const typename Tree::Type& t) {
+            return tree_.getKey(t);
         }
 
-        Distance selectAxis(unsigned *axis, int vol) const {
-            assert(vol != -1);
-            Eigen::Matrix<Distance, 1, 3> dots = min_.cwiseProduct(max_).colwise().sum();
-            assert((dots.array() >= Distance(0)).all());
-            return std::acos(dots.minCoeff(axis));
+        template <typename Iter>
+        Node* operator() (Iter first, Iter last) {
+            if (std::distance(first, last) <= 1)
+                return nullptr;
+
+            // TODO: we would get better cache locality if we
+            // accumulated the region bounds in a loop here, instead
+            // of having each space iterate individually.  The problem
+            // is that SO(2) needs to sort the elements locally to
+            // find a good partition.
+            
+            // Iter it = first;
+            // accum_.init(tree_.metricSpace(), tree_.getKey(*it));
+            // while (++it != last)
+            //     accum_.grow(tree_.metricSpace(), tree_.getKey(*it));
+
+            unsigned axis;
+            accum_.selectAxis(*this, tree_.metricSpace(), &axis, first, last);
+            return accum_.partition(*this, tree_.metricSpace(), axis, first, last);
         }
     };
 }

@@ -34,19 +34,38 @@
 //! @author Jeff Ichnowski
 
 #pragma once
-#ifndef NIGH_IMPL_KDTREE_BATCH_REGION_SO2_HPP
-#define NIGH_IMPL_KDTREE_BATCH_REGION_SO2_HPP
+#ifndef NIGH_IMPL_KDTREE_MEDIAN_ACCUM_SCALED_HPP
+#define NIGH_IMPL_KDTREE_MEDIAN_ACCUM_SCALED_HPP
 
-#include "region.hpp"
+#include "accum.hpp"
+#include "node.hpp"
 
-namespace unc::robotics::nigh::impl::kdtree_batch {
-
-    template <typename Key, int p, typename Concurrency>
-    class Region<Key, metric::SO2<p>, Concurrency> {
-        using Space = metric::Space<Key, metric::SO2<p>>;
+namespace unc::robotics::nigh::impl::kdtree_median {
+    
+    template <class Key, class M, class W, typename Get>
+    class Accum<Key, metric::Scaled<M, W>, Get>
+        : Accum<Key, M, Get>
+    {
+        using Base = Accum<Key, M, Get>;
+        using Metric = metric::Scaled<M, W>;
+        using Space = metric::Space<Key, Metric>;
+        using Distance = typename Space::Distance;
     public:
-        template <typename Tree, typename Get>
-        Region(const Space&, const Traversal<Tree, Key, metric::SO2<p>, Get>&, const Key& q) {}
+
+        template <typename Builder, typename Iter>
+        Distance selectAxis(
+            Builder& builder, const Space& space, unsigned *axis,
+            Iter first, Iter last)
+        {
+            return Base::selectAxis(builder, space.space(), axis, first, last) * space.weight();
+        }
+
+        template <typename Builder, typename Iter>
+        Node *partition(
+            Builder& builder, const Space& space, unsigned axis, Iter first, Iter last)
+        {
+            return Base::partition(builder, space.space(), axis, first, last);
+        }
     };
 }
 

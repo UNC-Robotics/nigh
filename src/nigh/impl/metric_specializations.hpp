@@ -33,54 +33,8 @@
 
 //! @author Jeff Ichnowski
 
-#pragma once
-#ifndef NIGH_TEST_IMPL_SAMPLER_CARTESIAN_HPP
-#define NIGH_TEST_IMPL_SAMPLER_CARTESIAN_HPP
-
-#include "sampler.hpp"
-#include <nigh/metric/space_cartesian.hpp>
-#include <nigh/se3_space.hpp>
-
-namespace nigh_test {
-    using namespace unc::robotics::nigh::metric;
-
-    template <typename State, typename Metric, typename Indices>
-    struct CartesianSampler;
-
-    template <std::size_t I, typename S, typename M>
-    using cartesian_sampler_element_t = Sampler<
-        cartesian_state_element_t<I, S>,
-        cartesian_element_t<I, M>>;
-
-    template <typename State, typename Metric, std::size_t ... I>
-    struct CartesianSampler<State, Metric, std::index_sequence<I...>>
-        : std::tuple<cartesian_sampler_element_t<I, State, Metric>...>
-    {
-        static_assert(sizeof...(I) > 0, "empty cartesian metric");
-        using Base = std::tuple<cartesian_sampler_element_t<I, State, Metric>...>;
-
-        CartesianSampler(const Space<State, Metric>& space)
-            : Base(cartesian_sampler_element_t<I, State, Metric>(space.template get<I>())...)
-        {
-        }
-
-        template <typename RNG>
-        State operator() (RNG& rng){
-            State q;
-            ((std::get<I>(q) = std::get<I>(*this)(rng)), ...);
-            return q;
-        }
-    };
-
-    template <typename State, typename ... M>
-    struct Sampler<State, Cartesian<M...>>
-        : CartesianSampler<State, Cartesian<M...>, std::index_sequence_for<M...>>
-    {
-        using Base = CartesianSampler<State, Cartesian<M...>, std::index_sequence_for<M...>>;
-        using Base::Base;
-    };
-
-}
-
-#endif
-
+#include "kdtree_batch/nearest_traversals.hpp"
+#include "kdtree_batch/traversals.hpp"
+#include "kdtree_median/accums.hpp"
+#include "kdtree_median/traversals.hpp"
+#include "regions.hpp"

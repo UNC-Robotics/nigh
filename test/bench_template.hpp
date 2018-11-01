@@ -42,6 +42,7 @@
 #include <nigh/metric/so3.hpp>
 #include <nigh/metric/cartesian.hpp>
 #include <nigh/kdtree_batch.hpp>
+#include <nigh/kdtree_median.hpp>
 #include <nigh/linear.hpp>
 #include <nigh/gnat.hpp>
 #include <random>
@@ -64,6 +65,13 @@ namespace nigh_test {
     struct Name<double> {
         static std::string name() {
             return "double";
+        }
+    };
+
+    template <std::intmax_t num, std::intmax_t den>
+    struct Name<std::ratio<num, den>> {
+        static std::string name() {
+            return std::to_string(num) + ":" + std::to_string(den);
         }
     };
 
@@ -109,6 +117,13 @@ namespace nigh_test {
         }
     };
 
+    template <class M, class W>
+    struct Name<unc::robotics::nigh::metric::Scaled<M, W>> {
+        static std::string name() {
+            return "Scaled<" + Name<M>::name() + ", " + Name<W>::name() + ">";
+        }
+    };
+
     template <typename F, typename ... R>
     struct Name<unc::robotics::nigh::metric::Cartesian<F, R...>> {
         static std::string name() {
@@ -135,6 +150,14 @@ namespace nigh_test {
     struct Name<unc::robotics::nigh::KDTreeBatch<batchSize>> {
         static std::string name() {
             return "KDTreeBatch<" + std::to_string(batchSize) + ">";
+        }
+    };
+
+    template <std::size_t minTreeSize, std::size_t linearSearchSize>
+    struct Name<unc::robotics::nigh::KDTreeMedian<minTreeSize, linearSearchSize>> {
+        static std::string name() {
+            return "KDTreeMedian<" + std::to_string(minTreeSize) + ", "
+                + std::to_string(linearSearchSize) + ">";
         }
     };
 
@@ -197,7 +220,7 @@ namespace nigh_test {
         static constexpr std::size_t nTrees = 4;
         static constexpr std::size_t nQueries = 1024*1024;
 
-        std::size_t N = std::is_same_v<Linear, Strategy> ? 2000 : 100000;
+        std::size_t N = 100000; // std::is_same_v<Linear, Strategy> ? 10000 : 100000;
         std::size_t K = 20;
         Clock::duration stepDuration = 100ms;
 

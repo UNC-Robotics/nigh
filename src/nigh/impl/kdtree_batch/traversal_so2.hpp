@@ -46,128 +46,6 @@
 
 namespace unc::robotics::nigh::impl::kdtree_batch {
 
-    // Finds a split on a set of SO(2) values normalized to the range
-    // [-pi,pi].  The split divides the values into two evenly sized
-    // (_N/2) sets, and maximizes the distance of the bounds to the
-    // split.
-    template <typename Iter>
-    auto so2split(Iter first, Iter last) {
-        using Scalar = typename std::iterator_traits<Iter>::value_type;
-        std::size_t n = std::distance(first, last);
-        assert(n > 1); // can only split more than 1 element
-
-        // The loop finds the `i` at which half elements are to the
-        // left of the line bisecting line it define.  To find it we
-        // test for `j = i + N/2`, that the ccw distance to `[j] < pi`
-        // and `[j+1] > pi`.  The "best" split is the one that
-        // maximizes the distance between the points closest to the
-        // split, thus `[i]`, `[i+1]`, `[j]`, and `[j+1]`.
-
-        // distances: pi-D(i,j), D(i,j+1)-pi, D(i,i+1)
-        //
-        //        i
-        //        |@@@
-        //        |@@@@
-        //   -----X@@@@
-        //   ####/|\@@@
-        //    ##/ | \@
-        //     j    j+1
-
-        //          /
-        // j+1 ----X
-        //     ###/|\     |
-        //     ##/ |@\    |
-        //     #/  |@@\   |
-        //     i       j
-
-        //        j+1 j
-        //      ###| /@
-        //     ####|/@@@
-        //     ####X@@@@
-        //     ###/ \@@@
-        //      #/   \@
-        //      i
-
-        std::sort(first, last);
-        Scalar dBest = -1, split = 0;
-        Iter i1 = first;
-        Iter j1 = first + n/2;
-        do {
-            Iter i0 = i1;
-            Iter j0 = j1;
-            if (++i1 == last) i1 = first;
-            if (++j1 == last) j1 = first;
-            Scalar d0 = PI<Scalar> - so2::ccwDist(*i0, *j0); // vals[i], vals[j%n]);
-            Scalar d1 = PI<Scalar> - so2::ccwDist(*j1, *i0); // vals[(j+1)%n], vals[i]);
-
-            if (d0 >= 0 && d1 >= 0) {
-                Scalar di = so2::ccwDist(*i0, *i1); // vals[i], vals[(i+1)%n]);
-                // Scalar split = vals[i] + std::min(di, d1) * 0.5;
-
-                Scalar range = 2*PI<Scalar> - (d0+d1);
-
-                if (range < PI<Scalar>) {
-                    // The range of values is less than half a circle.
-                    // split halfway between i0 and i1
-                    if (range > dBest) {
-                        dBest = range;
-                        split = *i0 + di * 0.5;
-                    }
-                } else {
-                    // The range of values is more than half a circle
-                    // split considering both sides of split plane.
-                    // we cannot split halfway between i0 and i1 since
-                    // it could result in moving j1 to the other side
-                    // of the split.
-                    //
-                    // An easy split to do would be i0 + min(di,d1)/2,
-                    // since that would be halfway from the split to
-                    // the next bound.  This is also guaranteed to be
-                    // in the bounds.
-                    //
-                    // A possibly better split is to try to maximize
-                    // the sum of square distances from the split.
-                    //
-                    // define x as the split offset from i0.  The
-                    // distances from the split plane are thus:
-                    //
-                    //   i0 to split = x
-                    //   split to i1 = di - x
-                    //   j0 to split = d0 + x
-                    //   split to j1 = d1 - x
-                    //
-                    // summing the square of the above quantities,
-                    // then differentiating and solving for 0, we get:
-                    //
-                    // x = (di + d1 - d0) / 4;
-
-                    // Compute the range as the sum of distances from
-                    // the split.  We add PI so that we prefer
-                    // splitting these axes over axes that are already
-                    // split.
-                    Scalar dSum = PI<Scalar> + (di+d0+d1)/2; // std::min({di, d0, d1});
-                    if (dSum > dBest) {
-                        dBest = dSum;
-                        split = *i0 + std::min(di, d1) * Scalar(0.5);
-                    }
-                }
-            }
-        } while (i1 != first);
-
-        //if (sBest > PI<Scalar>) sBest -= 2*PI<Scalar>;
-        split = so2::bound(split);
-
-        assert(0 <= dBest && dBest <= 2*PI<Scalar>);
-        assert(-PI<Scalar> <= split && split <= PI<Scalar>);
-
-        return std::make_pair(dBest, split);
-    }
-
-    template <typename Container>
-    auto so2split(Container& container) {
-        return so2split(container.begin(), container.end());
-    }
-
     template <typename Tree, typename Key, int p, typename Get>
     class Traversal<Tree, Key, metric::SO2<p>, Get> {
     protected:
@@ -205,7 +83,7 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
                 for (std::size_t j=0 ; j<batchSize ; ++j)
                     Q[j] = so2::bound(Space::coeff(Get::part(tree.getKey(leaf->elements()[j])), a));
 
-                [[maybe_unused]] auto [distToSplit, split] = so2split(Q);
+                [[maybe_unused]] auto [distToSplit, split] = so2::split(Q);
                 (void)split; // GCC seems to ignore [[maybe_unused]]
 
                 // distToSplit will be in the range 0..2pi and is the
@@ -230,7 +108,7 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
             // TODO: so2split works for all arrangements.  But we
             // can use an nth_element (e.g., faster) if we are in
             // a bounded subregion.  (Do same with following.)
-            [[maybe_unused]] auto [distToSplit, split] = so2split(Q);
+            [[maybe_unused]] auto [distToSplit, split] = so2::split(Q);
             (void)distToSplit; // GCC seems to ignore [[maybe_unused]]
 
             std::size_t dst0 = 0;

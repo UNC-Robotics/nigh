@@ -64,12 +64,13 @@ namespace unc::robotics::nigh::metric {
         }
     };
 
+    template <class M, std::intmax_t num, std::intmax_t den = 1>
+    using RatioScaled = Scaled<M, std::ratio<num, den>>;
+
     template <typename M, typename W>
     struct is_metric<Scaled<M, W>> : is_metric<M> {};
 }
 
-#include "../impl/kdtree_batch/nearest_traversals.hpp"
-#include "../impl/kdtree_batch/regions.hpp"
-#include "../impl/kdtree_batch/traversals.hpp"
+#include "../impl/metric_specializations.hpp"
 
 #endif

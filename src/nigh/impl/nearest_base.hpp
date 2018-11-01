@@ -38,6 +38,7 @@
 #define NIGH_NEAREST_BASE_HPP
 
 #include "../nigh_forward.hpp"
+#include <type_traits>
 #include <memory>
 #include <vector>
 
@@ -73,11 +74,19 @@ namespace unc::robotics::nigh::impl {
             metric::is_space<Space_>::value,
             "metric space is invalid");
 
+        static_assert(
+            std::is_invocable_v<const KeyFn&, const T&>,
+            "KeyFn must be a functor that accepts 'const T&' as an argument");
+
     public:
         using Type = T;
         using Space = Space_;
         using Key = typename Space::Type;
 
+        static_assert(
+            std::is_invocable_r_v<Key, const KeyFn&, const T&>,
+            "KeyFn(T) must return a value compatible with Key type");
+        
         // make sure Key is compatible with SpaceSpace::Type
         // using Key = std::decay_t<std::result_of_t<KeyFn(T)>>;
         // Note: this is may need some work to handle copyable

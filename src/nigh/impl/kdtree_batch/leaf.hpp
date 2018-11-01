@@ -58,16 +58,16 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
 
     public:
         //Leaf(const Metric& metric, const T& t) : Base(metric, t), size_(1) {
-        template <typename Tree, typename Get>
-        Leaf(const Space& space, const Traversal<Tree, Key, Metric, Get>& traversal, const T& q, const Key& key)
+        template <typename Traversal>
+        Leaf(const Space& space, const Traversal& traversal, const T& q, const Key& key)
             : Base(space, traversal, key)
             , size_(1)
         {
             put(0, q);
         }
 
-        template <typename Tree, typename Get, typename GetKey, typename Iter>
-        Leaf(const Space& space, Traversal<Tree, Key, Metric, Get>& traversal, const GetKey& getKey, Iter first, Iter last)
+        template <typename Traversal, typename GetKey, typename Iter>
+        Leaf(const Space& space, Traversal& traversal, const GetKey& getKey, Iter first, Iter last)
             : Base(space, traversal, getKey(**first))
         {
             int i=0;

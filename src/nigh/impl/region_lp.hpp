@@ -34,16 +34,17 @@
 //! @author Jeff Ichnowski
 
 #pragma once
-#ifndef NIGH_IMPL_KDTREE_BATCH_REGION_LP_HPP
-#define NIGH_IMPL_KDTREE_BATCH_REGION_LP_HPP
+#ifndef NIGH_IMPL_REGION_LP_HPP
+#define NIGH_IMPL_REGION_LP_HPP
 
 #include "region.hpp"
-#include "../box_distance.hpp"
-#include "../lp_sum.hpp"
+#include "box_distance.hpp"
+#include "lp_sum.hpp"
 #include <Eigen/Dense>
 #include <array>
+#include <type_traits>
 
-namespace unc::robotics::nigh::impl::kdtree_batch {
+namespace unc::robotics::nigh::impl {
 
     template <typename Key, int dim, int p, typename Concurrency>
     class LPRegion {
@@ -55,29 +56,64 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
         Eigen::Matrix<Distance, kDim, 1> max_;
 
     public:
+        LPRegion() = default;
+        
         LPRegion(const LPRegion& region)
             : min_(region.min_)
             , max_(region.max_)
         {
         }
 
-        template <typename Tree, typename Get>
-        LPRegion(const Space&, const Traversal<Tree, Key, metric::LP<p>, Get>&, const Key& q)
+        template <typename Traversal>
+        LPRegion(const Space&, const Traversal&, const Key& q)
             : min_(q), max_(q)
         {
         }
         // LPRegion(const LPMetric<p>&, const T& q) : min_(q), max_(q) {}
 
         template <typename D>
+        void init(const Space&, const Eigen::MatrixBase<D>& q) {
+            min_ = q;
+            max_ = q;
+        }
+        
+        template <typename D>
         void grow(const Space&, const Eigen::MatrixBase<D>& q) {
             min_ = min_.cwiseMin(q);
             max_ = max_.cwiseMax(q);
         }
 
-        // template <typename D>
-        // void grow(const D& q) {
-        //     grow(Eigen::Map<const Eigen::Matrix<Distance, dim, 1>>(&q[0]));
-        // }
+        template <typename D>
+        void init(const Space& space, const Eigen::ArrayBase<D>& q) {
+            init(space, q.matrix());
+        }
+
+        template <typename D>
+        void grow(const Space& space, const Eigen::ArrayBase<D>& q) {
+            grow(space, q.matrix());
+        }
+
+        template <std::size_t N>
+        std::enable_if_t<N == dim>
+        init(const Space& space, const std::array<Distance, N>& q) {
+            init(space, Eigen::Map<const Eigen::Matrix<Distance, dim, 1>>(q.data()));
+        }
+
+        template <std::size_t N>
+        std::enable_if_t<N == dim>
+        grow(const Space& space, const std::array<Distance, N>& q) {
+            grow(space, Eigen::Map<const Eigen::Matrix<Distance, dim, 1>>(q.data()));
+        }
+
+        template <typename Alloc>
+        void init(const Space& space, const std::vector<Distance, Alloc>& q) {
+            init(space, Eigen::Map<const Eigen::Matrix<Distance, dim, 1>>(q.data(), q.size()));
+        }
+
+        template <typename Alloc>
+        void grow(const Space& space, const std::vector<Distance, Alloc>& q) {
+            grow(space, Eigen::Map<const Eigen::Matrix<Distance, dim, 1>>(q.data(), q.size()));
+        }
 
         constexpr unsigned dimensions() const {
             return min_.size();
@@ -105,6 +141,8 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
         std::array<Atom<Distance, true>, kDim> max_;
 
     public:
+        LPRegion() = default;
+        
         LPRegion(const LPRegion& other) {
             for (int i=0 ; i<kDim ; ++i) {
                 min_[i].store(other.min_[i].load(std::memory_order_relaxed), std::memory_order_relaxed);
@@ -112,8 +150,8 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
             }
         }
 
-        template <typename Tree, typename Get>
-        LPRegion(const Space&, const Traversal<Tree, Key, metric::LP<p>, Get>&, const Key& q) {
+        template <typename Traversal>
+        LPRegion(const Space&, const Traversal&, const Key& q) {
             // LPRegion(const metric::LP<p>&, const Q& q) {
             for (int i=0 ; i<kDim ; ++i) {
                 min_[i].store(Space::coeff(q, i), std::memory_order_relaxed);
@@ -185,6 +223,8 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
         std::vector<Coeff> max_;
 
     public:
+        LPRegion() = default;
+        
         LPRegion(const LPRegion& other)
             : min_(other.min_)
             , max_(other.max_)
@@ -197,8 +237,8 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
         {
         }
 
-        template <typename Tree, typename Get>
-        LPRegion(const Space& space, const Traversal<Tree, Key, metric::LP<p>, Get>&, const Key& q) {
+        template <typename Traversal>
+        LPRegion(const Space& space, const Traversal&, const Key& q) {
             unsigned dim = space.dimensions();
             min_.reserve(dim);
             max_.reserve(dim);
