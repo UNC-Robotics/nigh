@@ -38,6 +38,7 @@
 #define NIGH_IMPL_BLOCK_ALLOCATOR_HPP
 
 #include <array>
+#include <cassert>
 #include <forward_list>
 #include <memory>
 
