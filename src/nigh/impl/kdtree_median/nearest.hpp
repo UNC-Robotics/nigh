@@ -65,16 +65,16 @@ namespace unc::robotics::nigh::impl::kdtree_median {
         using Key = typename Space::Type;
 
         const Tree& tree_;
-        const Key& key_;
+        const Key key_;
 
         Traversal<Tree, Key, typename Space::Metric> traversal_;
                 
     public:
-        template <typename ... Args>
-        Nearest(const Tree& tree, const Key& key, Args&& ... args)
+        template <typename K, typename ... Args>
+        Nearest(const Tree& tree, K&& key, Args&& ... args)
             : NearSet(std::forward<Args>(args)...)
             , tree_(tree)
-            , key_(key)
+            , key_(std::forward<K>(key))
             , traversal_(tree.metricSpace())
         {
         }

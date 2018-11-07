@@ -66,15 +66,15 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
         const Tree& tree_;
         NearestTraversal<Tree> traversal_;
 
-        const Key& key_;
+        const Key key_;
 
     public:
-        template <typename ... Args>
-        Nearest(const Tree& tree, const Key& key, Args&& ... args)
+        template <typename K, typename ... Args>
+        Nearest(const Tree& tree, K&& key, Args&& ... args)
             : NearSet(std::forward<Args>(args)...)
             , tree_(tree)
             , traversal_(tree.metricSpace())
-            , key_(key)
+            , key_(std::forward<K>(key))
         {
         }
 
