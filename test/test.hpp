@@ -132,13 +132,9 @@ namespace test {
         }
 
     public:
-        Expect(const _T& value, const char *expr, const char *file, int line)
-            : value_(value), expr_(expr), file_(file), line_(line)
-        {
-        }
-
-        Expect(_T&& value, const char *expr, const char *file, int line)
-            : value_(std::move(value)), expr_(expr), file_(file), line_(line)
+        template <class Arg>
+        Expect(Arg&& value, const char *expr, const char *file, int line)
+            : value_(std::forward<Arg>(value)), expr_(expr), file_(file), line_(line)
         {
         }
 
@@ -182,7 +178,7 @@ namespace test {
     };
 }
 
-#define EXPECT(expr) (::test::Expect<typename std::decay<decltype(expr)>::type>( \
+#define EXPECT(expr) (::test::Expect<std::decay_t<decltype(expr)>>(     \
                           expr, #expr, __FILE__, __LINE__))
 
 #define TEST(name)                                              \

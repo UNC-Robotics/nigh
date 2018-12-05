@@ -130,8 +130,10 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
 
                 std::nth_element(ptrs.begin(), ptrs.begin() + batchSize/2, ptrs.end(), cmp);
 
-                Leaf *c0 = tree.template allocWithSpace<Leaf>(traversal, tree.keyFn(), ptrs.begin(), ptrs.begin() + batchSize/2);
-                Leaf *c1 = tree.template allocWithSpace<Leaf>(traversal, tree.keyFn(), ptrs.begin() + batchSize/2, ptrs.end());
+                Leaf *c0 = tree.template allocWithSpace<Leaf>(
+                    traversal, tree.keyFn(), ptrs.begin(), ptrs.begin() + batchSize/2);
+                Leaf *c1 = tree.template allocWithSpace<Leaf>(
+                    traversal, tree.keyFn(), ptrs.begin() + batchSize/2, ptrs.end());
 
                 Eigen::Matrix<Distance, 2, 1> q0max = so3::project(
                     Get::part(tree.getKey(**std::max_element(ptrs.begin(), ptrs.begin() + batchSize/2, cmp))),
@@ -166,13 +168,13 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
                     for ( ; i<batchSize/2 ; ++i) {
                         const auto& q = Get::part(tree.getKey(*ptrs[i]));
                         Distance dot = so3::dotSplit(split, q, vol_, axis);
-                        assert(dot < 0);
+                        assert(dot <= 0);
                     }
 
                     for ( ; i<batchSize ; ++i) {
                         const auto& q = Get::part(tree.getKey(*ptrs[i]));
                         Distance dot = so3::dotSplit(split, q, vol_, axis);
-                        assert(dot > 0);
+                        assert(dot >= 0);
                     }
                 }
 #endif

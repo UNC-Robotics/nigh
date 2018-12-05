@@ -101,9 +101,9 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
             {
 		bool correctSplit = true;
                 for (std::size_t i=0 ; i<batchSize/2 ; ++i)
-		    correctSplit &= Space::coeff(Get::part(tree.getKey(c0->elements()[i])), axis) < split;
+		    correctSplit &= Space::coeff(Get::part(tree.getKey(c0->elements()[i])), axis) <= split;
                 for (std::size_t i=0 ; i<batchSize/2 ; ++i)
-		    correctSplit &= Space::coeff(Get::part(tree.getKey(c1->elements()[i])), axis) > split;
+		    correctSplit &= Space::coeff(Get::part(tree.getKey(c1->elements()[i])), axis) >= split;
 		if (!correctSplit) {
 		    // std::cout << "SPLIT: " << axis << ": " << split << std::endl;
 		    // for (std::size_t i=0 ; i<batchSize/2 ; ++i)
