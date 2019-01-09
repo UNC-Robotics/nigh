@@ -26,6 +26,10 @@ CFLAGS+=" -std=c++17 -I../src -I../../nigh/src"
 CFLAGS+=" $($PKG_CONFIG --cflags-only-I $DEPS_ALL)"
 LIBS+=" $($PKG_CONFIG --libs eigen3 $DEPS_ALL)"
 
+if [[ `uname` = Linux ]] ; then
+    LIBS+=" -lpthread"
+fi
+
 echo "Required dependencies found, generating build.ninja"
 exec 3> build.ninja # open build.ninja for writing, use descriptor 3
 
