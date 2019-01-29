@@ -60,6 +60,11 @@ namespace unc::robotics::nigh::metric {
             return a;
         }
 
+        static Distance& coeff(Type& a, std::size_t i) {
+            assert(i == 0);
+            return a;
+        }
+
         Distance distance(const Type& a, const Type& b) const {
             return nigh::impl::so2::angularDistance(a, b);
         }
