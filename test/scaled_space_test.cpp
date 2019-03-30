@@ -39,7 +39,8 @@
 
 TEST(distance_ratio_scaled_l2) {
     using namespace unc::robotics::nigh;
-    using Space = metric::ScaledSpace<metric::L2Space<double, 3>, std::ratio<7,2>>;
+    using Weight = std::ratio<7,2>;
+    using Space = metric::ScaledSpace<metric::L2Space<double, 3>, Weight>;
 
     EXPECT((std::is_same_v<typename Space::Type, Eigen::Vector3d>)) == true;
 
@@ -48,3 +49,14 @@ TEST(distance_ratio_scaled_l2) {
         == std::sqrt(0.0 + 1.0 + 2.0*2.0) * 7 / 2;
 }
 
+TEST(distance_scalar_scaled_l2) {
+    using namespace unc::robotics::nigh;
+    using Weight = double;
+    using Space = metric::ScaledSpace<metric::L2Space<double, 3>, Weight>;
+
+    EXPECT((std::is_same_v<typename Space::Type, Eigen::Vector3d>)) == true;
+
+    Space space(12.345);
+    EXPECT(space.distance(Eigen::Vector3d(1,2,3), Eigen::Vector3d(1,1,1)))
+        == std::sqrt(0.0 + 1.0 + 2.0*2.0) * 12.345;
+}

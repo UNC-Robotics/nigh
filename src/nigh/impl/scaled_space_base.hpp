@@ -67,13 +67,18 @@ namespace unc::robotics::nigh::impl {
     private:
         using Base = Space<S, M>;
     public:
-        using Distance = std::common_type_t<typename Base::Distance, W>;
+        // TODO: consider using std::common_type_t<typename
+        // Base::Distance, W> for the distance type.  This would mean
+        // that scaling by a double would result in an underlying
+        // floating point space being cast to a double.  It is
+        // unlikely that this will provide any benefit.
+        using Distance = typename Base::Distance;
     private:
         Distance weight_;
 
     public:
         template <typename ... Args>
-        explicit ScaledSpaceBase(Distance w, Args&& ... args)
+        ScaledSpaceBase(Distance w, Args&& ... args)
             : Base(std::forward<Args>(args)...)
             , weight_(w)
         {

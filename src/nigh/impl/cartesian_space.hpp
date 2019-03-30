@@ -59,7 +59,7 @@ namespace unc::robotics::nigh::impl {
     private:
         using Base = std::tuple<cartesian_space_element<I, S, M>...>;
 
-                constexpr const Base& tuple() const {
+        constexpr const Base& tuple() const {
             return *this;
         }
     public:

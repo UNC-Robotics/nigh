@@ -47,11 +47,11 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
     class ScaledNearestTraversal<Tree, Key, M, std::ratio<num, den>, Get>
         : NearestTraversal<Tree, Key, M, Get>
     {
+        using Base = NearestTraversal<Tree, Key, M, Get>;
         using Node = node_t<Tree>;
         using Weight = std::ratio<num, den>;
         using Metric = metric::Scaled<M, Weight>;
         using Space = metric::Space<Key, Metric>;
-        using Base = NearestTraversal<Tree, Key, M, Get>;
         using Concurrency = concurrency_t<Tree>;
 
     public:
@@ -70,6 +70,39 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
         }
     };
 
+    template <typename Tree, typename Key, typename M, typename W, typename Get>
+    class ScaledNearestTraversal<Tree, Key, M, W, Get, std::enable_if_t<std::is_floating_point_v<W>>>
+        : NearestTraversal<Tree, Key, M, Get>
+    {
+        using Base = NearestTraversal<Tree, Key, M, Get>;
+        using Node = node_t<Tree>;
+        using Weight = distance_t<Tree>;
+        using Metric = metric::Scaled<M, W>;
+        using Space = metric::Space<Key, Metric>;
+        using Concurrency = concurrency_t<Tree>;
+
+        Weight weight_;
+        
+    public:
+        explicit ScaledNearestTraversal(const Space& space)
+            : Base(space.space())
+            , weight_(space.weight())
+        {
+        }
+
+        auto distToRegion(const Key& key, const Region<Key, Metric, Concurrency>& region) const {
+            // TODO: make distToRegion take Space as an argument, then
+            // we will not need to store the weight as a member of
+            // this class.
+            return Base::distToRegion(key, region) * weight_;
+        }
+
+        template <typename Visitor>
+        void traverse(Visitor& visitor, const Space& space, const Node *node, unsigned axis, const Key& key) {
+            Base::traverse(visitor, space.space(), node, axis, key);
+        }
+    };
+    
     template <typename Tree, typename Key, typename M, typename W, typename Get>
     class NearestTraversal<Tree, Key, metric::Scaled<M, W>, Get>
         : public ScaledNearestTraversal<Tree, Key, M, W, Get>

@@ -46,6 +46,7 @@ namespace unc::robotics::nigh::metric {
     struct Space<S, Cartesian<M0, M...>>
         : impl::CartesianSpace<S, Cartesian<M0, M...>, std::index_sequence_for<M0, M...>>
     {
+        using impl::CartesianSpace<S, Cartesian<M0, M...>, std::index_sequence_for<M0, M...>>::CartesianSpace;
     };
 }
 

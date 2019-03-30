@@ -41,42 +41,25 @@
 #include "types.hpp"
 
 namespace unc::robotics::nigh::impl::kdtree_batch {
-    template <typename Tree, typename Key, typename M, typename W, typename Get, typename Enabled = void>
-    class ScaledTraversal;
-
-    template <typename Tree, typename Key, typename M, std::intmax_t num, std::intmax_t den, typename Get>
-    class ScaledTraversal<Tree, Key, M, std::ratio<num, den>, Get>
-        : Traversal<Tree, Key, M, Get>
-    {
+    template <typename Tree, typename Key, typename M, typename W, typename Get>
+    class ScaledTraversalBase : Traversal<Tree, Key, M, Get> {
         using Base = Traversal<Tree, Key, M, Get>;
         using Node = node_t<Tree>;
         using Leaf = leaf_t<Tree>;
-        using Distance = distance_t<Tree>;
         using NodePointer = node_pointer_t<Tree>;
-        using Weight = std::ratio<num, den>;
-        using Metric = metric::Scaled<M, Weight>;
+        using Metric = metric::Scaled<M, W>;
         using Space = metric::Space<Key, Metric>;
         using Concurrency = concurrency_t<Tree>;
 
+    protected:
+        using Base::selectAxis;
+
     public:
-        explicit ScaledTraversal(const Space& space)
+        explicit ScaledTraversalBase(const Space& space)
             : Base(space.space())
         {
         }
-
-        Base& traversal() { return *this; }
-        const Base& traversal() const { return *this; }
-
-        auto distToRegion(const Key& key, const Region<Key, Metric, Concurrency>& region) const {
-            // TODO: consistent scaling mechanism...
-            return Base::distToRegion(key, region) * Weight::num / Weight::den;
-        }
-
-        Distance selectAxis(Tree& tree, const Space& space, const Leaf* leaf, const Key& q, unsigned *axis) {
-            // TODO: consistent scaling mechanism...
-            return Base::selectAxis(tree, space.space(), leaf, q, axis) * Weight::num / Weight::den;
-        }
-
+        
         void grow(const Space& space, Region<Key, Metric, Concurrency>& region, const Key& q) {
             Base::grow(space.space(), region, q);
         }
@@ -99,15 +82,83 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
         void clear(Clear& visitor, const Space& space, Node *node, unsigned axis) {
             Base::clear(visitor, space.space(), node, axis);
         }
-
     };
 
-    // TODO:
-    // template <typename Tree, typename Key, typename M, typename Scalar, typename Get>
-    // class ScaledTraversal<Tree, Key, M, Scalar, Get, std::enable_if_t<std::is_floating_point_v<Scalar>>>
-    //     : public Traversal<Tree, Key, M, Get>
-    // {
-    // };
+    template <typename Tree, typename Key, typename M, typename W, typename Get, typename Enabled = void>
+    class ScaledTraversal;
+    
+    template <typename Tree, typename Key, typename M, std::intmax_t num, std::intmax_t den, typename Get>
+    class ScaledTraversal<Tree, Key, M, std::ratio<num, den>, Get>
+        : public ScaledTraversalBase<Tree, Key, M, std::ratio<num, den>, Get>
+    {
+        using Base = ScaledTraversalBase<Tree, Key, M, std::ratio<num, den>, Get>;
+        using Node = node_t<Tree>;
+        using Leaf = leaf_t<Tree>;
+        using Distance = distance_t<Tree>;
+        using NodePointer = node_pointer_t<Tree>;
+        using Weight = std::ratio<num, den>;
+        using Metric = metric::Scaled<M, Weight>;
+        using Space = metric::Space<Key, Metric>;
+        using Concurrency = concurrency_t<Tree>;
+
+    public:
+        using Base::Base;
+
+        Base& traversal() { return *this; }
+        const Base& traversal() const { return *this; }
+
+        auto distToRegion(const Key& key, const Region<Key, Metric, Concurrency>& region) const {
+            // TODO: consistent scaling mechanism...
+            return Base::distToRegion(key, region) * Weight::num / Weight::den;
+        }
+
+        Distance selectAxis(Tree& tree, const Space& space, const Leaf* leaf, const Key& q, unsigned *axis) {
+            // TODO: consistent scaling mechanism...
+            return Base::selectAxis(tree, space.space(), leaf, q, axis) * Weight::num / Weight::den;
+        }
+    };
+
+    template <typename Tree, typename Key, typename M, typename W, typename Get>
+    class ScaledTraversal<Tree, Key, M, W, Get, std::enable_if_t<std::is_floating_point_v<W>>>
+        : public ScaledTraversalBase<Tree, Key, M, W, Get>
+    {
+        using Base = ScaledTraversalBase<Tree, Key, M, W, Get>;
+        using Node = node_t<Tree>;
+        using Leaf = leaf_t<Tree>;
+        using Distance = distance_t<Tree>;
+        using NodePointer = node_pointer_t<Tree>;
+        // Weight could also be `W`, but if W and Distance are
+        // different, then having the scaling factor converted once at
+        // construction time, instead of every distance computation,
+        // will be more efficient.
+        using Weight = Distance; 
+        using Metric = metric::Scaled<M, W>;
+        using Space = metric::Space<Key, Metric>;
+        using Concurrency = concurrency_t<Tree>;
+
+        Weight weight_;
+        
+    public:
+        ScaledTraversal(const Space& space)
+            : Base(space)
+            , weight_(space.weight())
+        {
+        }
+
+        Base& traversal() { return *this; }
+        const Base& traversal() const { return *this; }
+
+        auto distToRegion(const Key& key, const Region<Key, Metric, Concurrency>& region) const {
+            // TODO: make distToRegion take space as an argument, then
+            // we will not need to keep around a copy of the space's
+            // weight.
+            return Base::distToRegion(key, region) * weight_;
+        }
+
+        Distance selectAxis(Tree& tree, const Space& space, const Leaf* leaf, const Key& q, unsigned *axis) {
+            return Base::selectAxis(tree, space.space(), leaf, q, axis) * weight_;
+        }
+    };
 
     template <typename Tree, typename Key, typename M, typename W, typename Get>
     class Traversal<Tree, Key, metric::Scaled<M, W>, Get>

@@ -45,8 +45,27 @@ namespace unc::robotics::nigh::metric {
     template <typename M, typename W>
     struct Scaled {
         static_assert(std::is_floating_point_v<W>, "weight type must be a floating point value, or std::ratio");
+        
         using Metric = M;
         using Weight = W;
+
+    private:
+	Weight weight_;
+	
+    public:
+	constexpr Scaled(Weight weight)
+	    : weight_(weight)
+	{
+	}
+
+	constexpr const Metric& metric() const {
+	    return *this;
+	}
+
+	template <typename S>
+	constexpr S weight() const {
+	    return static_cast<S>(weight_);
+	}
     };
 
     template <typename M, std::intmax_t num, std::intmax_t den>

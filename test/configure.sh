@@ -196,9 +196,10 @@ done
 # Create generated test cases and benchmarks
 GENDIR="generated"
 mkdir -p $GENDIR
-for space in l1_2 l2_3 linf_7 so2_1 so2_7 so3 se3 se3r scaled_se3_7_3 ; do
+for space in l1_2 l2_3 linf_7 so2_1 so2_7 so3 se3 se3r scaled_se3_7_3 scaled_se3_scalar ; do
     state_list="eigen_vector"
     value_list="state"
+    space_args=""
     case $space in
         l*)
             #metric=${space%_*}
@@ -238,11 +239,18 @@ for space in l1_2 l2_3 linf_7 so2_1 so2_7 so3 se3 se3r scaled_se3_7_3 ; do
             includes="sampler_lp sampler_so3 sampler_cartesian sampler_scaled"
             state_list="tuple"
             ;;
+        scaled_se3_scalar)
+            dim=-1
+            metric_type="Cartesian<Scaled<SO3, double>, LP<2>>"
+            includes="sampler_lp sampler_so3 sampler_cartesian sampler_scaled"
+            state_list="tuple"
+            space_args="(4.321)"
+            ;;
     esac
     
     for state in $state_list ; do
         for scalar in float double long_double ; do
-            args=""
+            args="$space_args"
             scalar_type=${scalar//_/ }
             case $state in
                 eigen_quaternion) store="Eigen::Quaternion<$scalar_type>" ;;

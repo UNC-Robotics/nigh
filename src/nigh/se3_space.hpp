@@ -75,6 +75,11 @@ namespace unc::robotics::nigh::impl {
 namespace unc::robotics::nigh::metric {
     template <typename Scalar, std::intmax_t so3weight = 1, std::intmax_t l2weight = 1>
     using SE3Space = typename impl::se3_space_selector<Scalar, so3weight, l2weight>::type;
+
+    template <typename Scalar, typename Weight = Scalar>
+    using ScaledSE3Space = metric::CartesianSpace<
+        ScaledSpace<SO3Space<Scalar>, Weight>,
+        L2Space<Scalar, 3>>;
 }
 
 #endif
