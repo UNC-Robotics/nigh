@@ -51,8 +51,7 @@ TEST(distance_ratio_scaled_l2) {
 
 TEST(distance_scalar_scaled_l2) {
     using namespace unc::robotics::nigh;
-    using Weight = double;
-    using Space = metric::ScaledSpace<metric::L2Space<double, 3>, Weight>;
+    using Space = metric::ScaledSpace<metric::L2Space<double, 3>>;
 
     EXPECT((std::is_same_v<typename Space::Type, Eigen::Vector3d>)) == true;
 

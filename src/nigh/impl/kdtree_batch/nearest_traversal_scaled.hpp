@@ -40,7 +40,7 @@
 #include "nearest_traversal.hpp"
 
 namespace unc::robotics::nigh::impl::kdtree_batch {
-    template <typename Tree, typename Key, typename M, typename W, typename Get, typename Enabled = void>
+    template <typename Tree, typename Key, typename M, typename W, typename Get>
     class ScaledNearestTraversal;
 
     template <typename Tree, typename Key, typename M, std::intmax_t num, std::intmax_t den, typename Get>
@@ -70,14 +70,14 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
         }
     };
 
-    template <typename Tree, typename Key, typename M, typename W, typename Get>
-    class ScaledNearestTraversal<Tree, Key, M, W, Get, std::enable_if_t<std::is_floating_point_v<W>>>
+    template <typename Tree, typename Key, typename M, typename Get>
+    class ScaledNearestTraversal<Tree, Key, M, void, Get>
         : NearestTraversal<Tree, Key, M, Get>
     {
         using Base = NearestTraversal<Tree, Key, M, Get>;
         using Node = node_t<Tree>;
         using Weight = distance_t<Tree>;
-        using Metric = metric::Scaled<M, W>;
+        using Metric = metric::Scaled<M, void>;
         using Space = metric::Space<Key, Metric>;
         using Concurrency = concurrency_t<Tree>;
 

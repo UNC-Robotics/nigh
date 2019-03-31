@@ -241,7 +241,7 @@ for space in l1_2 l2_3 linf_7 so2_1 so2_7 so3 se3 se3r scaled_se3_7_3 scaled_se3
             ;;
         scaled_se3_scalar)
             dim=-1
-            metric_type="Cartesian<Scaled<SO3, double>, LP<2>>"
+            metric_type="Cartesian<Scaled<SO3>, LP<2>>"
             includes="sampler_lp sampler_so3 sampler_cartesian sampler_scaled"
             state_list="tuple"
             space_args="(4.321)"

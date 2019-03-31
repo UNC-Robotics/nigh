@@ -84,7 +84,7 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
         }
     };
 
-    template <typename Tree, typename Key, typename M, typename W, typename Get, typename Enabled = void>
+    template <typename Tree, typename Key, typename M, typename W, typename Get>
     class ScaledTraversal;
     
     template <typename Tree, typename Key, typename M, std::intmax_t num, std::intmax_t den, typename Get>
@@ -118,21 +118,17 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
         }
     };
 
-    template <typename Tree, typename Key, typename M, typename W, typename Get>
-    class ScaledTraversal<Tree, Key, M, W, Get, std::enable_if_t<std::is_floating_point_v<W>>>
-        : public ScaledTraversalBase<Tree, Key, M, W, Get>
+    template <typename Tree, typename Key, typename M, typename Get>
+    class ScaledTraversal<Tree, Key, M, void, Get>
+        : public ScaledTraversalBase<Tree, Key, M, void, Get>
     {
-        using Base = ScaledTraversalBase<Tree, Key, M, W, Get>;
+        using Base = ScaledTraversalBase<Tree, Key, M, void, Get>;
         using Node = node_t<Tree>;
         using Leaf = leaf_t<Tree>;
         using Distance = distance_t<Tree>;
         using NodePointer = node_pointer_t<Tree>;
-        // Weight could also be `W`, but if W and Distance are
-        // different, then having the scaling factor converted once at
-        // construction time, instead of every distance computation,
-        // will be more efficient.
         using Weight = Distance; 
-        using Metric = metric::Scaled<M, W>;
+        using Metric = metric::Scaled<M, void>;
         using Space = metric::Space<Key, Metric>;
         using Concurrency = concurrency_t<Tree>;
 

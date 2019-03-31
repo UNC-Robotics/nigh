@@ -40,7 +40,7 @@
 #include <ratio>
 
 namespace unc::robotics::nigh::impl {
-    template <typename S, typename M, typename W, typename Enabled = void>
+    template <typename S, typename M, typename W>
     struct ScaledSpaceBase;
 
     template <typename S, typename M, std::intmax_t num, std::intmax_t den>
@@ -60,8 +60,8 @@ namespace unc::robotics::nigh::impl {
         }
     };
 
-    template <typename S, typename M, typename W>
-    struct ScaledSpaceBase<S, M, W, std::enable_if_t<std::is_floating_point_v<W>>>
+    template <typename S, typename M>
+    struct ScaledSpaceBase<S, M, void>
         : Space<S, M>
     {
     private:

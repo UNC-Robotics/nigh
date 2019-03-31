@@ -51,7 +51,7 @@ namespace unc::robotics::nigh::impl {
 }
 
 namespace unc::robotics::nigh::metric {
-    template <typename Space, typename Weight>
+    template <typename Space, typename Weight = void>
     using ScaledSpace = typename impl::scaled_space_selector<Space, Weight>::type;
 }
 

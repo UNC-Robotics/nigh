@@ -42,29 +42,17 @@
 
 namespace unc::robotics::nigh::metric {
 
-    template <typename M, typename W>
-    struct Scaled {
-        static_assert(std::is_floating_point_v<W>, "weight type must be a floating point value, or std::ratio");
-        
-        using Metric = M;
-        using Weight = W;
+    template <typename M, typename W = void>
+    struct Scaled;
 
-    private:
-	Weight weight_;
-	
-    public:
-	constexpr Scaled(Weight weight)
-	    : weight_(weight)
-	{
-	}
+    template <typename M>
+    struct Scaled<M, void> {
+        static_assert(is_metric_v<M>, "first template parameter to Scaled must be a metric");
+    
+        using Metric = M;
 
 	constexpr const Metric& metric() const {
 	    return *this;
-	}
-
-	template <typename S>
-	constexpr S weight() const {
-	    return static_cast<S>(weight_);
 	}
     };
 
@@ -73,14 +61,10 @@ namespace unc::robotics::nigh::metric {
         using Metric = M;
         using Weight = std::ratio<num, den>;
 
+        static_assert(is_metric_v<M>, "first template parameter to Scaled must be a metric");
         static_assert(Weight::num > 0, "ratio must be positive");
 
         constexpr const Metric& metric() const { return *this; }
-
-        template <typename S>
-        constexpr S weight() const {
-            return static_cast<S>(Weight::num) / static_cast<S>(Weight::den);
-        }
     };
 
     template <class M, std::intmax_t num, std::intmax_t den = 1>
