@@ -78,7 +78,40 @@ Type/Template | Metric
 `SO3Metric`     | SO(3) rotational distance defined as the shorter of two angle along the great arc that subtends the two values.  Currently this assumes that the space will be represented by a unit quaternion.
 `CartesianMetric<M...>` | A metric that is the sum of contained metrics.
 `ScaledMetric<M, std::ratio<num, den>>` | A metric (`M`) scaled by a particular ratio.  This is meant to be used within a Cartesian metric.
-`ScaledMetric<M, S>` | A metric (`M`) scaled by a particular scalar (`S`) value.  `S` must be a floating point type.  This metric's constructor requires a scalar value argument.
+`ScaledMetric<M>` | A metric (`M`) scaled by a scalar value at runtime.  This metric's constructor requires a scalar value argument.
+
+## Using Scaled Metrics
+
+The `ScaledMetric` templates wrap another metric so that the distance function is multiplied by a scalar value.  As multiplying the distance by a scalar does not change the relation between pairs of points, the `ScaledMetric` is primarily for use embedded within a `CartesianMetric`.  Currently Nigh supports two forms of scaled metrics: (1) scaled by a compile-time constant as determined by a `std::ratio`, and (2) scaled by a runtime scalar stored in an instance of a space.  The former should be preferred when the constant is fixed as it does not require additional storage or maintainence of the scalar at runtime.  The later should be used when the scalar value can be configured at runtime.  But note that it is not possible to change the scalar once a the space is used by the tree as the scalar will be copied into a private variable at construction time.
+
+Example ratio weighted space:
+
+```c++
+using namespace unc::robotics::nigh;
+using Weight = std::ratio<7, 2>;
+using Space = CartesianSpace<
+    ScaledSpace<SO3Space<double>, std::ratio<7>>,    // multiply SO(3) distance by 7
+    ScaledSpace<L2Space<double>, std::ratio<2,3>>>;  // multiply L2 distance by 0.6666
+Space space;
+```
+
+Note, if you have a decimal ratio at compile time, just set the `std::ratio` denominator to the appropriate power of 10.  For example, to use a ratio of 12.345, use `std::ratio<12345,1000>`.
+
+Example runtime scalar weighted space:
+
+```c++
+using namespace unc::robotics::nigh;
+using Space = CartesianSpace<
+    ScaledSpace<SO3Space<double>>,
+    ScaledSpace<L2Space<double, 3>>>;
+// weighting scalar type matches scalar type of underlying space
+double so3wt = 12.345;     
+double l2wt = 6.789;
+Space space(so3wt, l2wt);
+Nigh<..., Space, ...> nn(space);
+```
+
+See also examples in the test directory.
 
 # Predefined Spaces
 
