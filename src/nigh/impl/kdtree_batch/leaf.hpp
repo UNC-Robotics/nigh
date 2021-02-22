@@ -50,10 +50,10 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
 
         static constexpr bool concurrentWrites = std::is_same_v<Concurrency, Concurrent>;
 
-        alignas(concurrentWrites ? cache_line_size : 0)
+        alignas(concurrentWrites ? cache_line_size : sizeof(int))
         Atom<int, concurrentWrites> size_;
 
-        alignas(concurrentWrites ? cache_line_size : 0)
+        alignas(concurrentWrites ? cache_line_size : sizeof(AlignedStorage))
         AlignedStorage elements_[batchSize];
 
     public:
