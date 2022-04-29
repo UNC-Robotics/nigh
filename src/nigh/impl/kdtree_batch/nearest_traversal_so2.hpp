@@ -87,7 +87,7 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
             Distance b1 = bounds_(a, 1);
             Distance oldDist = dists_[a];
             Distance oldDistToRegion = distToRegion_;
-            assert(so2::ccwRange(b0, split) < so2::ccwRange(b0, b1));
+            assert(so2::ccwDist(b0, split) < so2::ccwRange(b0, b1));
 
             // TODO: we only have to do this the first time, we
             // can simplify this check.

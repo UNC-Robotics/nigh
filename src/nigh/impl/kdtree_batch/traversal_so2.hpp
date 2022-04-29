@@ -111,6 +111,9 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
             [[maybe_unused]] auto [distToSplit, split] = so2::split(Q);
             (void)distToSplit; // GCC seems to ignore [[maybe_unused]]
 
+#if 0
+            // version disabled with #if 0.  This does not work if
+            // there are duplicate entries.
             std::size_t dst0 = 0;
             std::size_t dst1 = batchSize;
             T *elements[batchSize];
@@ -127,6 +130,21 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
 
             Leaf *c0 = tree.template allocWithSpace<Leaf>(traversal, tree.keyFn(), elements, elements + batchSize/2);
             Leaf *c1 = tree.template allocWithSpace<Leaf>(traversal, tree.keyFn(), elements + batchSize/2, elements + batchSize);
+#else
+            std::array<T*, batchSize> ptrs;
+            for (std::size_t i=0 ; i<batchSize ; ++i)
+                ptrs[i] = leaf->elements() + i;
+
+            std::nth_element(
+                ptrs.begin(), ptrs.begin() + batchSize/2, ptrs.end(),
+                [&tree, axis, splitVal=split - PI<Distance>] (const T* a, const T* b) {
+                    return (so2::ccwDist(splitVal, Space::coeff(Get::part(tree.getKey(*a)), axis)) >
+                            so2::ccwDist(splitVal, Space::coeff(Get::part(tree.getKey(*b)), axis)));
+                });
+
+            Leaf *c0 = tree.template allocWithSpace<Leaf>(traversal, tree.keyFn(), ptrs.begin(), ptrs.begin() + batchSize/2);
+            Leaf *c1 = tree.template allocWithSpace<Leaf>(traversal, tree.keyFn(), ptrs.begin() + batchSize/2, ptrs.end());
+#endif
 
             return tree.template alloc<SO2Branch>(leaf, axis, split, c0, c1);
         }
