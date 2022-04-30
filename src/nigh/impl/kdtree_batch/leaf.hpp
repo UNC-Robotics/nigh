@@ -46,14 +46,19 @@ namespace unc::robotics::nigh::impl::kdtree_batch {
         using Base = Node<T, Space, Concurrency>;
         using Key = typename Space::Type;
         using Metric = typename Space::Metric;
-        using AlignedStorage = std::aligned_storage_t<sizeof(T), alignof(T)>;
+        // std::aligned_storage is being deprecated.  See
+        // http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1413r2.pdf
+        // using AlignedStorage = std::aligned_storage_t<sizeof(T), alignof(T)>;
+        struct AlignedStorage {
+            alignas(T) std::byte buf_[sizeof(T)];
+        };
 
         static constexpr bool concurrentWrites = std::is_same_v<Concurrency, Concurrent>;
 
         alignas(concurrentWrites ? cache_line_size : sizeof(int))
         Atom<int, concurrentWrites> size_;
 
-        alignas(concurrentWrites ? cache_line_size : sizeof(AlignedStorage))
+        alignas(concurrentWrites ? cache_line_size : alignof(T)) alignas(T)
         AlignedStorage elements_[batchSize];
 
     public:
