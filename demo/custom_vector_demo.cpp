@@ -132,7 +132,7 @@ namespace unc::robotics::nigh::metric {
 
         // This required method computes and returns the distance
         // between two points.  The computation must match the metric
-        // a specified by the second template parameter.  Note: Nigh
+        // as specified by the second template parameter.  Note: Nigh
         // could implement this function based upon dimensions(), and
         // coeff(), however it is likely that a custom data type can
         // have a much faster implementation (e.g., based upon SIMD
