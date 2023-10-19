@@ -285,9 +285,9 @@ namespace unc::robotics::nigh::impl {
 
         Distance distTo(const Key& key) const {
             std::size_t dimensions = min_.size();
-            impl::LPSum<p, Distance> sum(std::max({Distance(0), min(0) - key[0], key[0] - max(0)}));
+            impl::LPSum<p, Distance> sum(std::max({Distance(0), min(0) - Space::coeff(key, 0), Space::coeff(key, 0) - max(0)}));
             for (std::size_t i=1 ; i<dimensions ; ++i)
-                sum += std::max({Distance(0), min(i) - key[i], key[i] - max(i)});
+                sum += std::max({Distance(0), min(i) - Space::coeff(key, i), Space::coeff(key, i) - max(i)});
             return sum;
         }
     };
